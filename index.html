@@ -1,0 +1,4319 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Screenshot Collage</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Reset & Base ──────────────────────────────────────────── */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #F3F4F8;
+      --surface: #FFFFFF;
+      --border: #E4E6EE;
+      --border-light: #EFF0F5;
+      --accent: #4F46E5;
+      --accent-dark: #4338CA;
+      --accent-glow: rgba(79, 70, 229, 0.12);
+      --text-1: #111827;
+      --text-2: #4B5563;
+      --text-3: #9CA3AF;
+      --red: #DC2626;
+      --red-bg: #FEF2F2;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 20px 60px rgba(0, 0, 0, 0.18);
+      --radius-card: 12px;
+      --radius-btn: 9px;
+    }
+
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      color: var(--text-1);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* ── Navbar ────────────────────────────────────────────────── */
+    #navbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      height: 62px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+      flex-shrink: 0;
+    }
+
+    #brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      background: var(--accent);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.35);
+    }
+
+    #app-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.3px;
+    }
+
+    #toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #count-badge {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-2);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      border-radius: 99px;
+      white-space: nowrap;
+      letter-spacing: 0.1px;
+    }
+
+    .nav-sep {
+      width: 1px;
+      height: 22px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    /* ── Buttons ───────────────────────────────────────────────── */
+    button {
+      font-family: inherit;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: none;
+      border-radius: var(--radius-btn);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 16px;
+      transition: background 0.15s, border-color 0.15s, opacity 0.15s, transform 0.12s, box-shadow 0.15s;
+      white-space: nowrap;
+      letter-spacing: -0.1px;
+    }
+
+    button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    button:not(:disabled):active {
+      transform: translateY(0) !important;
+    }
+
+    #btn-export-png {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    }
+
+    #btn-export-png:not(:disabled):hover {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-2);
+      border: 1.5px solid var(--border);
+    }
+
+    .btn-secondary:not(:disabled):hover {
+      background: var(--bg);
+      border-color: #C0C4D4;
+      color: var(--text-1);
+      transform: translateY(-1px);
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-3);
+      padding: 8px 12px;
+    }
+
+    .btn-ghost:not(:disabled):hover {
+      background: var(--red-bg);
+      color: var(--red);
+    }
+
+    .btn-danger {
+      color: var(--red);
+    }
+
+    .btn-danger:hover {
+      background: var(--red-bg);
+    }
+
+    /* ── Empty State ───────────────────────────────────────────── */
+    #empty-state {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 24px;
+    }
+
+    #drop-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      max-width: 460px;
+      text-align: center;
+    }
+
+    .drop-icon-wrap {
+      width: 76px;
+      height: 76px;
+      background: var(--accent-glow);
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    #drop-zone h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-1);
+      letter-spacing: -0.4px;
+      line-height: 1.3;
+    }
+
+    #drop-zone p {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.75;
+    }
+
+    .shortcut-row {
+      margin-top: 8px;
+    }
+
+    .shortcut-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 7px 16px;
+      font-size: 13px;
+      color: var(--text-2);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .shortcut-label {
+      color: var(--text-3);
+      margin-left: 4px;
+    }
+
+    /* ── Paste Strip ───────────────────────────────────────────── */
+    #paste-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-light);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-3);
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+
+    .strip-tip {
+      color: var(--text-3);
+      margin-left: 4px;
+    }
+
+    /* ── kbd ───────────────────────────────────────────────────── */
+    kbd {
+      display: inline-block;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 5px;
+      padding: 1px 7px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--text-2);
+      line-height: 1.7;
+    }
+
+    /* ── Cards Container — horizontal flex-wrap grid ───────────── */
+    #cards-container {
+      max-width: 1240px;
+      width: calc(100% - 48px);
+      margin: 24px auto 60px;
+      display: flex;
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: stretch;
+      gap: 4px;
+    }
+
+    /* ── Card (small horizontal tile) ──────────────────────────── */
+    .card {
+      position: relative;
+      width: 200px;
+      height: 170px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-card);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      transition: box-shadow 0.18s, border-color 0.18s, transform 0.15s;
+      animation: card-enter 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+      user-select: none;
+    }
+
+    @keyframes card-enter {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: #C7CAD7;
+      transform: translateY(-2px);
+    }
+
+    .card.dragging {
+      opacity: 0.4;
+      transform: scale(0.96);
+      box-shadow: var(--shadow-lg);
+    }
+
+    /* Drop indicator lines shown while dragging */
+    .card.drop-before { box-shadow: -3px 0 0 0 #4F46E5, var(--shadow-md); }
+    .card.drop-after  { box-shadow:  3px 0 0 0 #4F46E5, var(--shadow-md); }
+    .card.section-card.drop-before { box-shadow: 0 -3px 0 0 #4F46E5; }
+    .card.section-card.drop-after  { box-shadow: 0  3px 0 0 #4F46E5; }
+
+    /* Subtle slide transition so tiles ease into place when neighbour is reordered */
+    .card:not(.dragging) {
+      transition: box-shadow 0.18s, border-color 0.18s, transform 0.18s ease;
+    }
+
+    /* ── Insert-between button ──────────────────────────────────── */
+    .card-insertor {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 0;            /* collapsed — takes no space until a neighbour is hovered */
+      overflow: hidden;
+      transition: width 0.18s ease;
+    }
+    /* Expand the slot only when hovering the card to its left (so the + appears on
+       the right of the hovered card) or the slot itself. */
+    .card:hover + .card-insertor,
+    .card-insertor:hover {
+      width: 36px;
+    }
+    .card-insertor-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 100%;
+      flex-shrink: 0;
+      border-radius: 8px;
+      border: 1.5px dashed var(--border);
+      background: var(--surface);
+      color: var(--text-3);
+      cursor: pointer;
+      font-size: 20px;
+      font-weight: 300;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.15s ease, border-color 0.15s, color 0.15s, background 0.15s, transform 0.12s;
+    }
+    .card:hover + .card-insertor .card-insertor-btn,
+    .card-insertor:hover .card-insertor-btn {
+      opacity: 1;
+    }
+    .card-insertor-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+      transform: scale(1.08);
+    }
+
+    /* Sequence number badge */
+    .card-seq {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      background: rgba(0, 0, 0, 0.62);
+      backdrop-filter: blur(6px);
+      color: #fff;
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+      z-index: 2;
+    }
+
+    .card-thumb {
+      flex: 1;
+      min-height: 0;
+      background: #F3F4F6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .card.text-card {
+      background: linear-gradient(135deg, #FFFDF5 0%, #FFF7E5 100%);
+      border-color: #F2E2B3;
+    }
+
+    .card.text-card .card-thumb {
+      background: transparent;
+      padding: 36px 14px 8px;
+      align-items: flex-start;
+      justify-content: flex-start;
+      text-align: left;
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--text-2);
+      font-weight: 500;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: hidden;
+      -webkit-line-clamp: 6;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+    }
+
+    .card.text-card .card-caption-line {
+      display: none;
+    }
+
+    .card.file-card {
+      background: linear-gradient(135deg, #F5F8FF 0%, #EBF0FF 100%);
+      border-color: #C5D0F0;
+    }
+
+    .card.file-card .card-thumb {
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 12px 12px;
+      gap: 8px;
+    }
+
+    .file-type-badge {
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 3px 7px;
+      border-radius: 4px;
+      background: #4F46E5;
+      color: #fff;
+    }
+    .file-type-badge.ft-pdf   { background: #DC2626; }
+    .file-type-badge.ft-word  { background: #2563EB; }
+    .file-type-badge.ft-excel { background: #16A34A; }
+    .file-type-badge.ft-ppt   { background: #EA580C; }
+    .file-type-badge.ft-msg   { background: #0284C7; }
+
+    .file-card-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-1);
+      text-align: center;
+      word-break: break-all;
+      max-width: 100%;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+    }
+
+    .file-card-size {
+      font-size: 10px;
+      color: var(--text-3);
+    }
+
+    .file-modal-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 48px 24px;
+      text-align: center;
+    }
+
+    .file-modal-badge {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 6px;
+      background: #4F46E5;
+      color: #fff;
+    }
+    .file-modal-badge.ft-pdf   { background: #DC2626; }
+    .file-modal-badge.ft-word  { background: #2563EB; }
+    .file-modal-badge.ft-excel { background: #16A34A; }
+    .file-modal-badge.ft-ppt   { background: #EA580C; }
+    .file-modal-badge.ft-msg   { background: #0284C7; }
+
+    .file-modal-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-1);
+      word-break: break-all;
+      max-width: 480px;
+    }
+
+    .file-modal-meta {
+      font-size: 13px;
+      color: var(--text-3);
+    }
+
+    .file-modal-download {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding: 8px 18px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.15s;
+    }
+    .file-modal-download:hover { opacity: 0.85; }
+
+    /* ── Card selection ─────────────────────────────────────── */
+    .card-select-chk {
+      position: absolute;
+      top: 6px;
+      right: 34px;
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      border: 2px solid #C7CAD7;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.12s, border-color 0.12s, background 0.12s;
+      flex-shrink: 0;
+    }
+    .card:hover .card-select-chk,
+    .card.selected .card-select-chk { opacity: 1; }
+    .card.selected .card-select-chk {
+      background: #4F46E5;
+      border-color: #4F46E5;
+    }
+    .card.selected .card-select-chk::after {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 8px;
+      border: 2px solid #fff;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+    .card.selected { outline: 2px solid #4F46E5; outline-offset: 1px; }
+
+    #selection-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1E1B4B;
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.28);
+      z-index: 200;
+      white-space: nowrap;
+      transition: opacity 0.18s, transform 0.18s;
+    }
+    #selection-bar.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(12px);
+    }
+    #selection-bar button {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    #selection-bar button:hover { background: rgba(255,255,255,0.25); }
+    #sel-group-btn { background: #4F46E5 !important; border-color: #6366F1 !important; }
+    #sel-group-btn:hover { background: #4338CA !important; }
+    #sel-del-btn { background: #DC2626 !important; border-color: #EF4444 !important; }
+    #sel-del-btn:hover { background: #B91C1C !important; }
+
+    /* ── Section card ────────────────────────────────────────── */
+    .card.section-card {
+      width: 100%;
+      flex-basis: 100%;
+      height: auto;
+      min-height: 48px;
+      background: linear-gradient(90deg, #EEF2FF 0%, #F5F3FF 100%);
+      border-color: #C7D2FE;
+      border-left: 4px solid #4F46E5;
+      padding: 0 14px 0 36px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      border-radius: 6px;
+      box-shadow: none;
+      flex-direction: row;
+    }
+
+    .card.section-card .card-seq {
+      display: none;
+    }
+
+    .card.section-card:hover {
+      border-color: #A5B4FC;
+      border-left-color: #4338CA;
+    }
+
+    /* Collapse indicator (chevron) sits in the section's left gutter.
+       It's non-interactive — clicks pass through to the section card. */
+    .section-toggle {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4338CA;
+      pointer-events: none;
+    }
+    .section-toggle svg {
+      transition: transform 0.18s ease;
+    }
+
+    /* Drag handle to move the whole section (header + its cards) */
+    .section-move {
+      flex-shrink: 0;
+      margin-left: 8px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: #818CF8;
+      border-radius: 5px;
+      cursor: grab;
+      padding: 0;
+      touch-action: none; /* let pointer-drag work on touch without scrolling */
+    }
+    .section-move:hover { background: rgba(79, 70, 229, 0.12); color: #4338CA; }
+    .section-move:active { cursor: grabbing; }
+    /* On a section header the controls sit inline at the right, so the delete
+       button flows next to the move handle instead of floating top-right. */
+    .card.section-card .card-del {
+      position: static;
+      opacity: 1;
+      flex-shrink: 0;
+      margin-left: 6px;
+    }
+    /* Member cards being carried along while their section is dragged */
+    .card.section-block-dragging { opacity: 0.55; }
+    .card.section-card.collapsed .section-toggle svg {
+      transform: rotate(-90deg);
+    }
+    /* Count of hidden cards, shown only while collapsed */
+    .section-count {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #6366F1;
+      background: #E0E7FF;
+      border-radius: 10px;
+      padding: 2px 9px;
+      margin-left: 8px;
+      white-space: nowrap;
+    }
+    .section-count:empty { display: none; } /* no empty pill when the section is expanded */
+    /* Cards hidden because their section is collapsed */
+    .card.section-collapsed-hidden,
+    .card-insertor.section-collapsed-hidden { display: none !important; }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #4338CA;
+      flex: 1;
+      outline: none;
+      min-height: 22px;
+      cursor: text;
+      padding: 10px 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    .section-title:empty::before {
+      content: 'Section title…';
+      color: #A5B4FC;
+      font-weight: 400;
+      font-style: italic;
+      pointer-events: none;
+    }
+
+    /* Section divider line in export preview */
+    .preview-section {
+      width: 60%;
+      padding: 10px 14px;
+      background: linear-gradient(90deg, #EEF2FF 0%, #F5F3FF 100%);
+      border-left: 4px solid #4F46E5;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #4338CA;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .preview-section .pv-chevron {
+      flex-shrink: 0;
+      display: flex;
+      transition: transform 0.15s ease;
+    }
+    .preview-section.collapsed .pv-chevron { transform: rotate(-90deg); }
+    .preview-section .pv-sec-title { flex: 1; }
+    .preview-section .pv-sec-count {
+      font-weight: 600;
+      font-size: 11px;
+      color: #6366F1;
+      background: rgba(99,102,241,0.12);
+      border-radius: 10px;
+      padding: 1px 8px;
+    }
+
+    /* Highlight colours */
+    mark { border-radius: 2px; padding: 0 1px; background: #FEF08A; }
+
+    /* Highlight toolbar in text modal */
+    .highlight-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .highlight-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      border: 1.5px solid rgba(0,0,0,0.12);
+      background: #FEF08A;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .highlight-btn:hover { transform: scale(1.1); box-shadow: 0 1px 5px rgba(0,0,0,0.2); }
+    .highlight-btn.hl-clear {
+      background: var(--surface);
+      border-style: dashed;
+      font-size: 12px;
+      color: var(--text-3);
+    }
+
+    /* Rich text (contenteditable) editor */
+    .desc-rich {
+      flex: 1;
+      min-height: 120px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-1);
+      outline: none;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .desc-rich:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .desc-rich:empty::before {
+      content: attr(data-placeholder);
+      color: var(--text-3);
+      pointer-events: none;
+    }
+
+    .card-caption-line {
+      border-top: 1px solid var(--border-light);
+      padding: 7px 10px;
+      font-size: 11.5px;
+      color: var(--text-2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: #FAFBFC;
+      flex-shrink: 0;
+    }
+
+    .card-caption-line.empty {
+      color: var(--text-3);
+      font-style: italic;
+    }
+
+    /* Delete button — top-right of card, fades in on hover */
+    .card-del {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      padding: 0;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(4px);
+      border-radius: 6px;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0;
+      z-index: 3;
+      transition: opacity 0.15s, background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s;
+    }
+
+    .card:hover .card-del {
+      opacity: 1;
+    }
+
+    .card-del:hover {
+      background: var(--red-bg);
+      color: var(--red);
+      border-color: #FECACA;
+      transform: scale(1.08);
+    }
+
+    /* ── Modal — fullscreen clean minimal layout ───────────────── */
+    #detail-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 900;
+    }
+
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 14, 27, 0.45);
+      backdrop-filter: blur(3px);
+    }
+
+    .modal-panel {
+      position: absolute;
+      inset: 0;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: modal-pop 0.18s ease-out;
+    }
+
+    @keyframes modal-pop {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .modal-close:hover {
+      background: #fff;
+      color: var(--text-1);
+      border-color: #C0C4D4;
+    }
+
+    /* Floating prev/next navigation */
+    .modal-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.12s, opacity 0.15s;
+    }
+
+    .modal-nav:hover:not(:disabled) {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      transform: translateY(-50%) scale(1.06);
+    }
+
+    .modal-nav:disabled {
+      opacity: 0.25;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .modal-prev {
+      left: 18px;
+    }
+
+    .modal-next {
+      right: 18px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 64px 14px 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-light);
+      flex-shrink: 0;
+    }
+
+    .modal-seq {
+      background: var(--text-1);
+      color: #fff;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.5px;
+    }
+
+    .modal-kind {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    .modal-body {
+      flex: 1;
+      display: flex;
+      min-height: 0;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .modal-body.split {
+      flex-direction: row;
+    }
+
+    .modal-body:not(.split) {
+      padding: 40px;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    /* Image pane */
+    .modal-left {
+      flex: 1 1 60%;
+      min-width: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 10px;
+      padding: 18px 24px 24px;
+      overflow: hidden;
+    }
+
+    .annot-toolbar {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .annot-tool,
+    .annot-clear {
+      font: inherit;
+      font-size: 12px;
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-1);
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .annot-tool.active {
+      background: #4F46E5;
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .annot-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 1px var(--border);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .annot-color.active {
+      box-shadow: 0 0 0 2px #111827;
+    }
+
+    .annot-sep {
+      width: 1px;
+      height: 18px;
+      background: var(--border);
+      margin: 0 4px;
+    }
+
+    .annot-stage {
+      position: relative;
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .annot-stage img,
+    .modal-left img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: var(--shadow-sm);
+      display: block;
+    }
+
+    .annot-canvas {
+      position: absolute;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    .annot-text-editor {
+      position: absolute;
+      z-index: 5;
+      background: rgba(255, 255, 255, 0.5);
+      border: 1px dashed #4F46E5;
+      outline: none;
+      padding: 2px 4px;
+      margin: 0;
+      resize: none;
+      font-family: Inter, sans-serif;
+      line-height: 1.2;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    /* Resizer between panes */
+    .modal-resizer {
+      flex: 0 0 6px;
+      background: var(--border-light);
+      cursor: col-resize;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: background 0.15s;
+      z-index: 1;
+    }
+
+    .modal-resizer:hover,
+    .modal-resizer:active {
+      background: var(--accent);
+    }
+
+    .modal-resizer .grip {
+      width: 2px;
+      height: 36px;
+      background: var(--text-3);
+      border-radius: 1px;
+      opacity: 0.55;
+    }
+
+    .modal-resizer:hover .grip,
+    .modal-resizer:active .grip {
+      background: #fff;
+      opacity: 1;
+    }
+
+    /* Description pane */
+    .modal-right {
+      flex: 1 1 40%;
+      min-width: 0;
+      padding: 36px 44px;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    .modal-right.solo {
+      flex: 1 1 100%;
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 0;
+    }
+
+    .desc-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border-light);
+    }
+
+    .desc-input {
+      flex: 1;
+      min-height: 240px;
+      width: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 15px;
+      line-height: 1.65;
+      color: var(--text-1);
+      background: transparent;
+      border: none;
+      padding: 4px 0;
+      outline: none;
+      resize: none;
+    }
+
+    .desc-input::placeholder {
+      color: var(--text-3);
+    }
+
+    .desc-input:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    /* ── Export Preview Modal ──────────────────────────────────── */
+    #preview-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 980;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 14, 27, 0.55);
+      backdrop-filter: blur(4px);
+    }
+
+    #preview-modal.hidden { display: none; }
+
+    .preview-panel {
+      background: var(--surface);
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .preview-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .preview-header h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-1);
+      margin: 0;
+      letter-spacing: -0.2px;
+    }
+
+    .preview-header .preview-sub {
+      font-size: 12.5px;
+      color: var(--text-2, #6B7280);
+      font-weight: 500;
+    }
+
+    .preview-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .preview-item {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      width: 60%;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.05s;
+    }
+
+    .preview-item:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    /* Delete button on a preview item */
+    .pv-del {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text-2);
+      cursor: pointer;
+      opacity: 1;
+      font-size: 18px;
+      font-weight: 400;
+      line-height: 1;
+      padding: 0;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      z-index: 2;
+    }
+    .pv-del:hover {
+      background: #DC2626;
+      border-color: #EF4444;
+      color: #fff;
+    }
+
+    .preview-item:active { transform: translateY(1px); }
+
+    .preview-item:last-child { margin-bottom: 0; }
+
+    .preview-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .preview-item img {
+      /* display: block; */
+      max-width: 100%;
+      max-height: 340px;
+      margin: 0 auto;
+      border-radius: 6px;
+      border: 1px solid var(--border-light);
+    }
+
+    .preview-caption {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .preview-caption.empty {
+      color: #9CA3AF;
+      font-style: italic;
+    }
+
+    .preview-text {
+      font-size: 14px;
+      color: var(--text-1);
+      line-height: 1.55;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .preview-text.empty {
+      color: #9CA3AF;
+      font-style: italic;
+    }
+
+    .preview-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: var(--surface);
+    }
+
+    .preview-footer button {
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--text-1);
+      transition: background 0.15s;
+    }
+
+    .preview-footer button:hover { background: var(--border-light); }
+
+    .preview-footer button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .preview-footer button.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+    .preview-loading {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-2, #6B7280);
+      font-size: 13px;
+    }
+
+    /* ── Export Overlay ────────────────────────────────────────── */
+    #export-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 14, 27, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      backdrop-filter: blur(4px);
+    }
+
+    .overlay-panel {
+      background: var(--surface);
+      border-radius: 18px;
+      padding: 44px 64px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 22px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+    }
+
+    #export-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.72s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    #export-status-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-2);
+      letter-spacing: -0.1px;
+    }
+
+    /* ── Toast ─────────────────────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(72px);
+      background: var(--text-1);
+      color: #F9FAFB;
+      padding: 11px 22px;
+      border-radius: 10px;
+      font-size: 13.5px;
+      font-weight: 500;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 1000;
+      white-space: nowrap;
+      pointer-events: none;
+      letter-spacing: -0.1px;
+    }
+
+    #toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Responsive ────────────────────────────────────────────── */
+    @media (max-width: 660px) {
+      #navbar {
+        padding: 12px 16px;
+        flex-wrap: wrap;
+        height: auto;
+        gap: 10px;
+      }
+
+      #toolbar-right {
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        font-size: 12px;
+        padding: 7px 12px;
+      }
+
+      #cards-container {
+        width: calc(100% - 28px);
+        gap: 10px;
+      }
+
+      .card {
+        width: calc(50% - 5px);
+        height: 160px;
+      }
+
+      .overlay-panel {
+        padding: 32px 40px;
+      }
+
+      .modal-body.split {
+        flex-direction: column;
+      }
+
+      .modal-left,
+      .modal-right {
+        flex: 1 1 auto;
+      }
+
+      .modal-left {
+        padding: 18px;
+      }
+
+      .modal-right {
+        padding: 24px 20px;
+      }
+
+      .modal-resizer {
+        flex: 0 0 6px;
+        width: 100%;
+        height: 6px;
+        cursor: row-resize;
+      }
+
+      .modal-resizer .grip {
+        width: 36px;
+        height: 2px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ── Navbar ── -->
+  <header id="navbar">
+    <div id="brand">
+      <div class="brand-mark">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      </div>
+      <span id="app-name">Pasteboard</span>
+    </div>
+
+    <div id="toolbar-right">
+      <!-- <span id="count-badge" class="hidden"></span> -->
+      <div class="nav-sep"></div>
+      <button id="btn-undo" class="btn-secondary" title="Undo (Ctrl+Z)" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 14 4 9 9 4" />
+          <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
+        </svg>
+        Undo
+      </button>
+      <button id="btn-redo" class="btn-secondary" title="Redo (Ctrl+Y)" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 14 20 9 15 4" />
+          <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
+        </svg>
+        Redo
+      </button>
+      <div class="nav-sep"></div>
+      <button id="btn-add-section" class="btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="12" y2="18"/>
+        </svg>
+        Add Section
+      </button>
+      <button id="btn-toggle-sections" class="btn-secondary hidden" data-action="collapse" title="Collapse or expand every section">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="7 13 12 18 17 13"/>
+          <polyline points="7 6 12 11 17 6"/>
+        </svg>
+        <span class="toggle-label">Collapse All</span>
+      </button>
+      <!-- <button id="btn-add-text" class="btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Add text card -->
+      </button>
+      <button id="btn-open-project" class="btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+        </svg>
+        Open
+      </button>
+      <button id="btn-save-project" class="btn-secondary" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+          <polyline points="17 21 17 13 7 13 7 21" />
+          <polyline points="7 3 7 8 15 8" />
+        </svg>
+        Save
+      </button>
+      <input type="file" id="file-picker" accept=".json,application/json" hidden>
+      <button id="btn-export-pdf" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="12" y1="18" x2="12" y2="12" />
+          <line x1="9" y1="15" x2="15" y2="15" />
+        </svg>
+        Export PDF
+      </button>
+      <button id="btn-export-docx" class="btn-secondary" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+          <polyline points="14 2 14 8 20 8" />
+          <line x1="16" y1="13" x2="8" y2="13" />
+          <line x1="16" y1="17" x2="8" y2="17" />
+        </svg>
+        Export Word
+      </button>
+      <button id="btn-clear-all" class="btn-ghost" disabled>Clear all</button>
+    </div>
+  </header>
+
+  <!-- ── Empty State ── -->
+  <section id="empty-state">
+    <div id="drop-zone">
+      <div class="drop-icon-wrap">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="1.6"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="3" />
+          <circle cx="8.5" cy="8.5" r="1.5" />
+          <polyline points="21 15 16 10 5 21" />
+        </svg>
+      </div>
+      <h1>Paste your screenshots here</h1>
+      <p>Use Snipping Tool or <kbd>Print Screen</kbd> to capture, then press <kbd>Ctrl+V</kbd> anywhere on this page.
+        You can also paste files — PDFs, Word docs, Excel sheets, PowerPoints, or Outlook emails (.msg) — copied from
+        File Explorer. Add text-only cards in between, or <strong>Open</strong> a saved project (.json) to continue
+        editing.</p>
+      <div class="shortcut-row">
+        <div class="shortcut-pill">
+          <kbd>Ctrl</kbd><span>+</span><kbd>V</kbd>
+          <span class="shortcut-label">Paste screenshot</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Paste Strip (visible when cards exist) ── -->
+  <div id="paste-strip" class="hidden">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      stroke-linecap="round">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+    Paste screenshot or file
+    <kbd>Ctrl+V</kbd>
+    <span class="strip-tip">· Drag tiles to reorder · Click a tile to edit</span>
+  </div>
+
+  <!-- ── Cards (horizontal flex-wrap grid) ── -->
+  <main id="cards-container"></main>
+
+  <!-- ── Detail Modal ── -->
+  <div id="detail-modal" class="hidden" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-panel" role="document">
+      <button class="modal-close" id="modal-close" aria-label="Close">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round">
+          <line x1="18" y1="6" x2="6" y2="18" />
+          <line x1="6" y1="6" x2="18" y2="18" />
+        </svg>
+      </button>
+      <button class="modal-nav modal-prev" id="modal-prev" aria-label="Previous step" title="Previous (←)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6" />
+        </svg>
+      </button>
+      <button class="modal-nav modal-next" id="modal-next" aria-label="Next step" title="Next (→)">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6" />
+        </svg>
+      </button>
+      <div class="modal-header">
+        <span class="modal-seq" id="modal-seq">01</span>
+        <span class="modal-kind" id="modal-kind">Screenshot</span>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ── Export Preview Modal ── -->
+  <div id="preview-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="preview-title">
+    <div class="preview-panel">
+      <div class="preview-header">
+        <div>
+          <h2 id="preview-title">Export preview</h2>
+          <div class="preview-sub" id="preview-sub">Review your collage before exporting.</div>
+        </div>
+      </div>
+      <div class="preview-body" id="preview-body"></div>
+      <div class="preview-footer">
+        <button id="preview-cancel" type="button">Cancel</button>
+        <button id="preview-confirm" type="button" class="primary">Confirm &amp; Export</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Export Overlay ── -->
+  <div id="export-overlay" class="hidden">
+    <div class="overlay-panel">
+      <div id="export-spinner"></div>
+      <p id="export-status-text">Generating…</p>
+    </div>
+  </div>
+
+  <!-- ── Selection action bar ── -->
+  <div id="selection-bar" class="hidden">
+    <span id="sel-count"></span>
+    <button id="sel-group-btn">Group as Section</button>
+    <button id="sel-del-btn">Delete</button>
+    <button id="sel-clear-btn">Deselect all</button>
+  </div>
+
+  <!-- ── Toast ── -->
+  <div id="toast" role="alert" aria-live="assertive"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    'use strict';
+
+    // ── Data model ────────────────────────────────────────────────────────────────
+    // Each item: { id, type: 'image' | 'text' | 'file', ... }
+    //   image: { dataURL, imageWidth, imageHeight, caption }
+    //   text : { text }
+    //   file    : { name, fileType, size, dataURL }
+    //   section : { title }
+    const items = [];
+
+    // ── DOM refs ──────────────────────────────────────────────────────────────────
+    const CARDS = document.getElementById('cards-container');
+    const BTN_PDF = document.getElementById('btn-export-pdf');
+    const BTN_DOCX = document.getElementById('btn-export-docx');
+    const BTN_CLEAR = document.getElementById('btn-clear-all');
+    const BTN_ADD_TEXT = document.getElementById('btn-add-text');
+    const BTN_ADD_SECTION = document.getElementById('btn-add-section');
+    const BTN_TOGGLE_SECTIONS = document.getElementById('btn-toggle-sections');
+    const BTN_SAVE = document.getElementById('btn-save-project');
+    const BTN_OPEN = document.getElementById('btn-open-project');
+    const BTN_UNDO = document.getElementById('btn-undo');
+    const BTN_REDO = document.getElementById('btn-redo');
+    const FILE_PICKER = document.getElementById('file-picker');
+    const OVERLAY = document.getElementById('export-overlay');
+    const OVERLAY_TEXT = document.getElementById('export-status-text');
+    const COUNT_BADGE = document.getElementById('count-badge');
+    const EMPTY_STATE = document.getElementById('empty-state');
+    const PASTE_STRIP = document.getElementById('paste-strip');
+
+    const MODAL = document.getElementById('detail-modal');
+    const MODAL_SEQ = document.getElementById('modal-seq');
+    const MODAL_KIND = document.getElementById('modal-kind');
+    const MODAL_BODY = document.getElementById('modal-body');
+    const MODAL_CLOSE = document.getElementById('modal-close');
+    const MODAL_PREV = document.getElementById('modal-prev');
+    const MODAL_NEXT = document.getElementById('modal-next');
+    const MODAL_BACKDROP = MODAL.querySelector('.modal-backdrop');
+
+    // ── State ─────────────────────────────────────────────────────────────────────
+    let openItemId = null;
+    let selectedIds = new Set();
+
+    // ── Annotation state ──────────────────────────────────────────────────────────
+    const ANNOT_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6'];
+    let annotTool = 'pencil';   // 'pencil' | 'rect'
+    let annotColor = ANNOT_COLORS[0];
+    const ANNOT_PX = 4;
+    const TEXT_FONT_FRAC = 0.025; // ~2.5% of image height — small/standard
+    const TEXT_BG = 'rgba(255,255,255,0.5)';
+
+    function ensureAnnotations(entry) {
+      if (!Array.isArray(entry.annotations)) entry.annotations = [];
+      return entry.annotations;
+    }
+
+    function cloneItem(it) {
+      const out = { ...it };
+      delete out._cKey; delete out._cUrl;
+      if (Array.isArray(it.annotations)) {
+        out.annotations = it.annotations.map((a) => ({
+          ...a,
+          points: a.points ? a.points.map((p) => p.slice()) : undefined,
+        }));
+      }
+      return out;
+    }
+
+    function drawAnnotations(ctx, anns, w, h) {
+      if (!anns || !anns.length) return;
+      ctx.save();
+      for (const a of anns) {
+        ctx.save();
+        ctx.lineCap = a.type === 'highlight' ? 'butt' : 'round';
+        ctx.lineJoin = 'round';
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = a.color;
+        ctx.lineWidth = Math.max(1, (a.widthFrac || 0.005) * w);
+        if (a.type === 'free' && a.points && a.points.length) {
+          ctx.beginPath();
+          a.points.forEach((p, i) => {
+            const x = p[0] * w, y = p[1] * h;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          ctx.stroke();
+        } else if (a.type === 'highlight' && a.points && a.points.length) {
+          ctx.globalAlpha = a.alpha != null ? a.alpha : 0.35;
+          ctx.globalCompositeOperation = 'multiply';
+          ctx.beginPath();
+          a.points.forEach((p, i) => {
+            const x = p[0] * w, y = p[1] * h;
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+          });
+          if (a.points.length === 1) {
+            const x = a.points[0][0] * w, y = a.points[0][1] * h;
+            ctx.lineTo(x + 0.01, y);
+          }
+          ctx.stroke();
+        } else if (a.type === 'rect') {
+          ctx.strokeRect(a.x * w, a.y * h, a.w * w, a.h * h);
+        } else if (a.type === 'text') {
+          drawTextBox(ctx, a, w, h);
+        }
+        ctx.restore();
+      }
+      ctx.restore();
+    }
+
+    function measureTextBox(ctx, a, w, h) {
+      const fontPx = Math.max(10, (a.fontFrac || TEXT_FONT_FRAC) * h);
+      ctx.font = `${fontPx}px Inter, sans-serif`;
+      ctx.textBaseline = 'top';
+      const lineH = fontPx * 1.25;
+      const padX = fontPx * 0.4;
+      const padY = fontPx * 0.25;
+      const bw = a.w * w;
+      const lines = wrapText(ctx, a.text || '', Math.max(1, bw - padX * 2));
+      const maxLineW = lines.reduce((m, l) => Math.max(m, ctx.measureText(l).width), 0);
+      const contentH = lines.length * lineH + padY * 2;
+      return { fontPx, lineH, padX, padY, lines, maxLineW, contentH };
+    }
+
+    function drawTextBox(ctx, a, w, h) {
+      const m = measureTextBox(ctx, a, w, h);
+      const x = a.x * w, y = a.y * h;
+      const bw = a.w * w;
+      const drawH = Math.max(a.h * h, m.contentH);
+      const bgW = Math.min(bw, m.maxLineW + m.padX * 2);
+      ctx.save();
+      ctx.fillStyle = TEXT_BG;
+      ctx.fillRect(x, y, bgW, drawH);
+      ctx.fillStyle = a.color;
+      m.lines.forEach((line, i) => {
+        ctx.fillText(line, x + m.padX, y + m.padY + i * m.lineH);
+      });
+      ctx.restore();
+    }
+
+    function wrapText(ctx, text, maxW) {
+      const out = [];
+      const breakLong = (word) => {
+        const pieces = [];
+        let chunk = '';
+        for (const ch of word) {
+          if (chunk && ctx.measureText(chunk + ch + '-').width > maxW) {
+            pieces.push(chunk + '-');
+            chunk = ch;
+          } else {
+            chunk += ch;
+          }
+        }
+        if (chunk) pieces.push(chunk);
+        return pieces;
+      };
+      for (const para of text.split('\n')) {
+        if (!para) { out.push(''); continue; }
+        const words = para.split(' ');
+        let line = '';
+        for (const word of words) {
+          const test = line ? line + ' ' + word : word;
+          if (ctx.measureText(test).width <= maxW) {
+            line = test;
+            continue;
+          }
+          if (line) { out.push(line); line = ''; }
+          if (ctx.measureText(word).width <= maxW) {
+            line = word;
+          } else {
+            const pieces = breakLong(word);
+            for (let i = 0; i < pieces.length - 1; i++) out.push(pieces[i]);
+            line = pieces[pieces.length - 1] || '';
+          }
+        }
+        out.push(line);
+      }
+      return out;
+    }
+
+    async function composeImage(entry) {
+      const anns = entry.annotations || [];
+      if (!anns.length) return entry.dataURL;
+      const key = JSON.stringify(anns);
+      if (entry._cKey === key && entry._cUrl) return entry._cUrl;
+      const img = await loadImg(entry.dataURL);
+      const c = document.createElement('canvas');
+      c.width = img.naturalWidth || entry.imageWidth || 1;
+      c.height = img.naturalHeight || entry.imageHeight || 1;
+      const ctx = c.getContext('2d');
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      drawAnnotations(ctx, anns, c.width, c.height);
+      const url = c.toDataURL('image/png');
+      entry._cKey = key;
+      entry._cUrl = url;
+      return url;
+    }
+
+    // ── Undo / Redo history ───────────────────────────────────────────────────────
+    const HISTORY_LIMIT = 50;
+    let history = [];
+    let historyIndex = -1;
+    let isRestoring = false;
+    let textEditTimer = null;
+
+    function snapshot() {
+      return items.map(cloneItem);
+    }
+
+    function pushHistory() {
+      if (isRestoring) return;
+      if (textEditTimer) { clearTimeout(textEditTimer); textEditTimer = null; }
+      history = history.slice(0, historyIndex + 1);
+      history.push(snapshot());
+      if (history.length > HISTORY_LIMIT) history.shift();
+      historyIndex = history.length - 1;
+      updateUndoRedoButtons();
+    }
+
+    function pushHistoryDebounced() {
+      if (isRestoring) return;
+      clearTimeout(textEditTimer);
+      textEditTimer = setTimeout(() => {
+        textEditTimer = null;
+        pushHistory();
+      }, 600);
+    }
+
+    function flushPendingHistory() {
+      if (textEditTimer) { clearTimeout(textEditTimer); textEditTimer = null; pushHistory(); }
+    }
+
+    function resetHistory() {
+      history = [snapshot()];
+      historyIndex = 0;
+      updateUndoRedoButtons();
+    }
+
+    function restoreFromSnapshot(snap) {
+      isRestoring = true;
+      // Annotations are owned by the modal's inner history, not the outer trace.
+      // Preserve current annotations for items that still exist; only use the
+      // snapshot's annotations for items being re-introduced (e.g., undoing a
+      // delete or clear-all).
+      const currentAnnsById = new Map();
+      for (const it of items) currentAnnsById.set(it.id, it.annotations);
+      items.length = 0;
+      CARDS.innerHTML = '';
+      for (const raw of snap) {
+        const restored = cloneItem(raw);
+        if (currentAnnsById.has(raw.id)) {
+          restored.annotations = currentAnnsById.get(raw.id);
+          delete restored._cKey; delete restored._cUrl;
+        }
+        items.push(restored);
+        CARDS.appendChild(buildCard(items[items.length - 1]));
+      }
+      reindex();
+      syncInsertors();
+      updateUI();
+      if (openItemId) {
+        if (items.find((it) => it.id === openItemId)) openModal(openItemId, false);
+        else closeModal();
+      }
+      isRestoring = false;
+    }
+
+    function undo() {
+      flushPendingHistory();
+      if (historyIndex <= 0) return;
+      historyIndex--;
+      restoreFromSnapshot(history[historyIndex]);
+      updateUndoRedoButtons();
+    }
+
+    function redo() {
+      flushPendingHistory();
+      if (historyIndex >= history.length - 1) return;
+      historyIndex++;
+      restoreFromSnapshot(history[historyIndex]);
+      updateUndoRedoButtons();
+    }
+
+    function updateUndoRedoButtons() {
+      BTN_UNDO.disabled = historyIndex <= 0;
+      BTN_REDO.disabled = historyIndex >= history.length - 1;
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener('paste', handlePaste);
+      BTN_PDF.addEventListener('click', () => openExportPreview('pdf'));
+      BTN_DOCX.addEventListener('click', () => openExportPreview('docx'));
+      document.getElementById('preview-cancel').addEventListener('click', closeExportPreview);
+      document.getElementById('preview-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'preview-modal') closeExportPreview();
+      });
+      document.getElementById('preview-confirm').addEventListener('click', confirmExportPreview);
+      BTN_CLEAR.addEventListener('click', clearAll);
+      BTN_ADD_TEXT?.addEventListener('click', addTextCard);
+      BTN_ADD_SECTION?.addEventListener('click', () => addSection());
+      BTN_TOGGLE_SECTIONS?.addEventListener('click', () => {
+        // Collapse everything if any section is currently open; otherwise expand all.
+        const anyExpanded = items.some(it => it.type === 'section' && !it.collapsed);
+        setAllSectionsCollapsed(anyExpanded);
+      });
+      document.getElementById('sel-group-btn').addEventListener('click', groupSelected);
+      document.getElementById('sel-del-btn').addEventListener('click', deleteSelected);
+      document.getElementById('sel-clear-btn').addEventListener('click', clearSelection);
+      BTN_SAVE.addEventListener('click', saveProject);
+      BTN_OPEN.addEventListener('click', () => FILE_PICKER.click());
+      FILE_PICKER.addEventListener('change', handleProjectFile);
+      BTN_UNDO.addEventListener('click', undo);
+      BTN_REDO.addEventListener('click', redo);
+
+      // Global Ctrl/Cmd+Z and Ctrl/Cmd+Y / Ctrl+Shift+Z. Skip when typing in
+      // text fields so the browser's native field-level undo still works there.
+      document.addEventListener('keydown', (e) => {
+        if (!(e.ctrlKey || e.metaKey)) return;
+        const t = e.target;
+        const inField = t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.contentEditable === 'true');
+        if (inField) return;
+        const k = e.key.toLowerCase();
+        const modalOpen = !MODAL.classList.contains('hidden');
+        if (k === 'z' && !e.shiftKey) {
+          e.preventDefault();
+          if (modalOpen && MODAL._innerUndo) MODAL._innerUndo(); else undo();
+        } else if (k === 'y' || (k === 'z' && e.shiftKey)) {
+          e.preventDefault();
+          if (modalOpen && MODAL._innerRedo) MODAL._innerRedo(); else redo();
+        }
+      });
+
+      MODAL_CLOSE.addEventListener('click', closeModal);
+      MODAL_BACKDROP.addEventListener('click', closeModal);
+      // Use pointerdown + preventDefault so the click isn't lost when the
+      // currently-focused textarea blurs in response to the press.
+      const navHandler = (delta) => (e) => {
+        e.preventDefault();
+        if (e.currentTarget.disabled) return;
+        navigateModal(delta);
+      };
+      MODAL_PREV.addEventListener('pointerdown', navHandler(-1));
+      MODAL_NEXT.addEventListener('pointerdown', navHandler(1));
+      // Keep keyboard activation (Space/Enter) working
+      MODAL_PREV.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateModal(-1); }
+      });
+      MODAL_NEXT.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigateModal(1); }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (MODAL.classList.contains('hidden')) return;
+        if (e.key === 'Escape') { closeModal(); return; }
+        if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          // Don't hijack arrows while typing in the description
+          const t = e.target;
+          if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.contentEditable === 'true')) return;
+          e.preventDefault();
+          navigateModal(e.key === 'ArrowLeft' ? -1 : 1);
+        }
+      });
+
+      updateUI();
+      resetHistory();
+
+      window.addEventListener('beforeunload', (e) => {
+        if (items.length === 0) return;
+        e.preventDefault();
+        // Most modern browsers ignore custom text and show their own generic
+        // "Leave site? Changes you made may not be saved." prompt, but a
+        // non-empty returnValue is still required to trigger it.
+        e.returnValue = 'You have unsaved cards. Save your project before leaving.';
+        return e.returnValue;
+      });
+    });
+
+    // ── File-type helpers ─────────────────────────────────────────────────────────
+    function fileTypeClass(mimeType, name) {
+      const ext = (name || '').split('.').pop().toLowerCase();
+      if (mimeType === 'application/pdf' || ext === 'pdf') return 'ft-pdf';
+      if (mimeType.includes('word') || mimeType.includes('wordprocessingml') || ext === 'doc' || ext === 'docx') return 'ft-word';
+      if (mimeType.includes('excel') || mimeType.includes('spreadsheetml') || ext === 'xls' || ext === 'xlsx') return 'ft-excel';
+      if (mimeType.includes('powerpoint') || mimeType.includes('presentationml') || ext === 'ppt' || ext === 'pptx') return 'ft-ppt';
+      if (mimeType === 'application/vnd.ms-outlook' || ext === 'msg') return 'ft-msg';
+      return '';
+    }
+
+    function fileTypeLabel(mimeType, name) {
+      const cls = fileTypeClass(mimeType, name);
+      const map = { 'ft-pdf': 'PDF', 'ft-word': 'Word', 'ft-excel': 'Excel', 'ft-ppt': 'PowerPoint', 'ft-msg': 'Outlook' };
+      return map[cls] || (name || '').split('.').pop().toUpperCase() || 'File';
+    }
+
+    function formatFileSize(bytes) {
+      if (!bytes) return '';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1048576).toFixed(1) + ' MB';
+    }
+
+    function guessFileType(name) {
+      const ext = (name || '').split('.').pop().toLowerCase();
+      const map = {
+        pdf: 'application/pdf',
+        doc: 'application/msword',
+        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        xls: 'application/vnd.ms-excel',
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ppt: 'application/vnd.ms-powerpoint',
+        pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        msg: 'application/vnd.ms-outlook',
+      };
+      return map[ext] || 'application/octet-stream';
+    }
+
+    async function addFileCard(file, defer = false) {
+      const dataURL = await readFile(file);
+      const id = crypto.randomUUID();
+      const entry = {
+        id,
+        type: 'file',
+        name: file.name,
+        fileType: file.type || guessFileType(file.name),
+        size: file.size,
+        dataURL,
+      };
+      items.push(entry);
+      const card = buildCard(entry);
+      CARDS.appendChild(card);
+      if (!defer) {
+        reindex();
+        syncInsertors();
+        updateUI();
+        pushHistory();
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+      return card;
+    }
+
+    // ── Paste ─────────────────────────────────────────────────────────────────────
+    async function handlePaste(event) {
+      // Don't hijack paste inside modal inputs
+      if (event.target.closest('.modal-body')) return;
+      // Let editable fields (e.g. an active section title) handle their own paste
+      // natively — don't also spawn a card.
+      const el = event.target instanceof Element ? event.target : event.target?.parentElement;
+      if (el && (el.isContentEditable || el.closest('input, textarea, [contenteditable="true"], .section-title'))) return;
+
+      const clipData = event.clipboardData;
+      if (!clipData) return;
+
+      let handled = false;
+
+      // Snapshot every file on the clipboard *synchronously*. The clipboard's
+      // DataTransfer (both `.items` and each item's `getAsFile()`) is neutered
+      // the moment we `await` anything, so we must grab all File objects up
+      // front — otherwise only the first of several pasted files survives.
+      // `.files` is the reliable multi-file source (Explorer lets you copy
+      // several at once); fall back to `.items` for clipboard screenshots.
+      let files = clipData.files && clipData.files.length
+        ? Array.from(clipData.files)
+        : Array.from(clipData.items || [])
+            .filter(it => it.kind === 'file')
+            .map(it => it.getAsFile())
+            .filter(Boolean);
+
+      if (files.length > 0) {
+        event.preventDefault();
+        handled = true;
+        let lastCard = null;
+        for (const file of files) {
+          const isImage = (file.type || '').startsWith('image/');
+          try {
+            if (isImage) {
+              const dataURL = await readFile(file);
+              const { width, height } = await imgDimensions(dataURL);
+              const id = crypto.randomUUID();
+              const entry = { id, type: 'image', dataURL, imageWidth: width, imageHeight: height, caption: '', annotations: [] };
+              items.push(entry);
+              lastCard = buildCard(entry);
+              CARDS.appendChild(lastCard);
+            } else {
+              // PDF, DOCX, MSG, etc. — becomes an attachment card.
+              lastCard = await addFileCard(file, true);
+            }
+          } catch {
+            const label = isImage ? 'screenshot' : `file "${file.name}"`;
+            toast(`Could not add ${label} — please try again.`);
+          }
+        }
+        reindex();
+        syncInsertors();
+        updateUI();
+        pushHistory();
+        if (lastCard) lastCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      if (!handled) {
+        // Read text synchronously — preventDefault() must run before the
+        // handler yields, and the clipboard is neutered after any await.
+        const trimmed = (clipData.getData('text/plain') || '').trim();
+        if (trimmed) {
+          event.preventDefault();
+          // Pasted text becomes an editable text card. (Only actual files —
+          // PDF/Word/Excel/.msg/etc. — become attachments in the export bundle.)
+          const id = crypto.randomUUID();
+          const entry = { id, type: 'text', text: trimmed };
+          items.push(entry);
+          const card = buildCard(entry);
+          CARDS.appendChild(card);
+          reindex();
+          syncInsertors();
+          updateUI();
+          pushHistory();
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      }
+    }
+
+    // ── Add text card ─────────────────────────────────────────────────────────────
+    function addTextCard(afterId = null) {
+      const id = crypto.randomUUID();
+      const entry = { id, type: 'text', text: '' };
+      const card = buildCard(entry);
+
+      if (afterId) {
+        const afterCard = CARDS.querySelector(`.card[data-id="${afterId}"]`);
+        if (afterCard) {
+          const afterIdx = items.findIndex(it => it.id === afterId);
+          items.splice(afterIdx + 1, 0, entry);
+          // Insert card after the insertor that follows afterCard
+          const insertor = afterCard.nextSibling;
+          const refNode = insertor ? insertor.nextSibling : null;
+          CARDS.insertBefore(card, refNode);
+        } else {
+          items.push(entry);
+          CARDS.appendChild(card);
+        }
+      } else {
+        items.push(entry);
+        CARDS.appendChild(card);
+      }
+
+      reindex();
+      syncInsertors();
+      updateUI();
+      pushHistory();
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      openModal(id);
+    }
+
+    function addSection(afterId = null) {
+      const id = crypto.randomUUID();
+      const entry = { id, type: 'section', title: '' };
+      const card = buildCard(entry);
+
+      if (afterId) {
+        const afterCard = CARDS.querySelector(`.card[data-id="${afterId}"]`);
+        if (afterCard) {
+          const afterIdx = items.findIndex(it => it.id === afterId);
+          items.splice(afterIdx + 1, 0, entry);
+          const insertor = afterCard.nextSibling;
+          const refNode = insertor ? insertor.nextSibling : null;
+          CARDS.insertBefore(card, refNode);
+        } else {
+          items.push(entry);
+          CARDS.appendChild(card);
+        }
+      } else {
+        items.push(entry);
+        CARDS.appendChild(card);
+      }
+
+      reindex();
+      syncInsertors();
+      updateUI();
+      pushHistory();
+      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      // Focus the title for immediate editing
+      setTimeout(() => card.querySelector('.section-title')?.focus(), 50);
+    }
+
+    // ── Selection helpers ─────────────────────────────────────────────────────────
+    function toggleSelect(id) {
+      if (selectedIds.has(id)) {
+        selectedIds.delete(id);
+        CARDS.querySelector(`.card[data-id="${id}"]`)?.classList.remove('selected');
+      } else {
+        selectedIds.add(id);
+        CARDS.querySelector(`.card[data-id="${id}"]`)?.classList.add('selected');
+      }
+      updateSelectionBar();
+    }
+
+    function clearSelection() {
+      selectedIds.forEach(id => {
+        CARDS.querySelector(`.card[data-id="${id}"]`)?.classList.remove('selected');
+      });
+      selectedIds.clear();
+      updateSelectionBar();
+    }
+
+    function updateSelectionBar() {
+      const bar = document.getElementById('selection-bar');
+      const countEl = document.getElementById('sel-count');
+      if (!bar) return;
+      if (selectedIds.size === 0) {
+        bar.classList.add('hidden');
+      } else {
+        bar.classList.remove('hidden');
+        countEl.textContent = selectedIds.size === 1 ? '1 card selected' : `${selectedIds.size} cards selected`;
+      }
+    }
+
+    function deleteSelected() {
+      if (selectedIds.size === 0) return;
+      // Snapshot the ids before clearSelection() empties the set, then remove
+      // each from items[] and the DOM. One reindex/history entry for the batch,
+      // so a single Undo restores every deleted card.
+      const ids = [...selectedIds];
+      clearSelection();
+      for (const id of ids) {
+        const idx = items.findIndex((s) => s.id === id);
+        if (idx !== -1) items.splice(idx, 1);
+        CARDS.querySelector(`.card[data-id="${id}"]`)?.remove();
+      }
+      reindex();
+      syncInsertors();
+      updateUI();
+      pushHistory();
+    }
+
+    function groupSelected() {
+      if (selectedIds.size === 0) return;
+      const order = [...CARDS.querySelectorAll('.card')].map(c => c.dataset.id);
+      const selectedOrdered = order.filter(id => selectedIds.has(id));
+      if (!selectedOrdered.length) return;
+      clearSelection();
+
+      const firstCard = CARDS.querySelector(`.card[data-id="${selectedOrdered[0]}"]`);
+      if (!firstCard) return;
+
+      // Place the new section at the end of the first selected card's section region
+      // (just before the next section header, or at the very end). This keeps
+      // existing sections intact — their non-selected cards aren't split off — while
+      // still letting us pull together selected cards from any sections.
+      let boundaryRef = firstCard.nextElementSibling;
+      while (boundaryRef && !boundaryRef.classList.contains('section-card')) {
+        boundaryRef = boundaryRef.nextElementSibling;
+      }
+
+      const entry = { id: crypto.randomUUID(), type: 'section', title: '' };
+      const sectionCard = buildCard(entry);
+      items.push(entry);
+      CARDS.insertBefore(sectionCard, boundaryRef); // boundaryRef === null → append
+
+      // Move every selected card, in its existing order, to sit contiguously right
+      // after the new header — even ones that lived in other sections.
+      let anchor = sectionCard;
+      for (const sid of selectedOrdered) {
+        const c = CARDS.querySelector(`.card[data-id="${sid}"]`);
+        if (!c) continue;
+        anchor.after(c);
+        anchor = c;
+      }
+
+      syncOrder(); // rebuild items[] from the new DOM order
+      reindex();
+      syncInsertors();
+      updateUI();
+      pushHistory();
+      sectionCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setTimeout(() => sectionCard.querySelector('.section-title')?.focus(), 50);
+    }
+
+    // ── Sync insert-between buttons ───────────────────────────────────────────────
+    function syncInsertors() {
+      CARDS.querySelectorAll('.card-insertor').forEach(el => el.remove());
+      const cards = [...CARDS.querySelectorAll('.card')];
+      cards.forEach(card => {
+        // No insert button between a section header and its first node.
+        if (card.classList.contains('section-card')) return;
+        const ins = document.createElement('div');
+        ins.className = 'card-insertor';
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'card-insertor-btn';
+        btn.title = 'Insert text card here';
+        btn.textContent = '+';
+        btn.addEventListener('click', () => addTextCard(card.dataset.id));
+        ins.appendChild(btn);
+        card.after(ins);
+      });
+      applyCollapseStates();
+    }
+
+    // Hide/show the cards (and their insert buttons) that belong to a collapsed
+    // section, and show a "N hidden" badge on each collapsed section header. A
+    // section owns every card after it up to the next section header; cards before
+    // the first section are never collapsed.
+    function applyCollapseStates() {
+      let collapsed = false;
+      let countEl = null;
+      let hidden = 0;
+      const flush = () => { if (countEl) countEl.textContent = hidden ? `${hidden}` : ''; };
+      for (const el of CARDS.children) {
+        if (el.classList.contains('section-card')) {
+          flush();
+          collapsed = el.classList.contains('collapsed');
+          countEl = el.querySelector('.section-count');
+          hidden = 0;
+          el.classList.remove('section-collapsed-hidden');
+          continue;
+        }
+        el.classList.toggle('section-collapsed-hidden', collapsed);
+        if (collapsed && el.classList.contains('card')) hidden++;
+      }
+      flush();
+      refreshSectionToggle();
+    }
+
+    // Set every section's collapsed state at once (the navbar Collapse/Expand All
+    // button). One history entry for the whole batch.
+    function setAllSectionsCollapsed(collapsed) {
+      let changed = false;
+      for (const entry of items) {
+        if (entry.type !== 'section') continue;
+        if (entry.collapsed === collapsed) continue;
+        entry.collapsed = collapsed;
+        const card = CARDS.querySelector(`.card.section-card[data-id="${entry.id}"]`);
+        if (card) card.classList.toggle('collapsed', collapsed);
+        changed = true;
+      }
+      if (!changed) return;
+      applyCollapseStates();
+      pushHistory();
+    }
+
+    // Keep the Collapse/Expand All button hidden when there are no sections, and
+    // show the label for the action it will perform next.
+    function refreshSectionToggle() {
+      if (!BTN_TOGGLE_SECTIONS) return;
+      const sections = items.filter(it => it.type === 'section');
+      BTN_TOGGLE_SECTIONS.classList.toggle('hidden', sections.length === 0);
+      if (!sections.length) return;
+      const anyExpanded = sections.some(s => !s.collapsed);
+      BTN_TOGGLE_SECTIONS.dataset.action = anyExpanded ? 'collapse' : 'expand';
+      const label = BTN_TOGGLE_SECTIONS.querySelector('.toggle-label');
+      if (label) label.textContent = anyExpanded ? 'Collapse All' : 'Expand All';
+    }
+
+    // ── Card builder ──────────────────────────────────────────────────────────────
+    function buildCard(entry) {
+      const card = document.createElement('div');
+      const extraClass = entry.type === 'text' ? ' text-card' : entry.type === 'file' ? ' file-card' : entry.type === 'section' ? ' section-card' : '';
+      card.className = 'card' + extraClass;
+      card.dataset.id = entry.id;
+      card.draggable = false; // reordering is handled via pointer events, not native HTML5 DnD
+
+      const seq = document.createElement('span');
+      seq.className = 'card-seq';
+      seq.textContent = '01';
+
+      const del = document.createElement('button');
+      del.className = 'card-del';
+      del.type = 'button';
+      del.title = 'Delete';
+      del.setAttribute('aria-label', 'Delete');
+      del.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      del.addEventListener('click', (e) => {
+        e.stopPropagation();
+        removeItem(entry.id);
+      });
+
+      const selChk = document.createElement('div');
+      selChk.className = 'card-select-chk';
+      selChk.title = 'Select';
+      selChk.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleSelect(entry.id);
+      });
+
+      const thumb = document.createElement('div');
+      thumb.className = 'card-thumb';
+
+      if (entry.type === 'image') {
+        const img = document.createElement('img');
+        img.src = entry.dataURL;
+        img.alt = 'Screenshot';
+        img.draggable = false;
+        thumb.appendChild(img);
+        if ((entry.annotations || []).length) {
+          composeImage(entry)
+            .then((url) => { if (img.isConnected) img.src = url; })
+            .catch(() => { });
+        }
+
+        const cap = document.createElement('div');
+        cap.className = 'card-caption-line' + (htmlToText(entry.caption) ? '' : ' empty');
+        if (htmlToText(entry.caption)) cap.innerHTML = entry.caption;
+        else cap.textContent = 'No description';
+        card.append(seq, del, selChk, thumb, cap);
+      } else if (entry.type === 'file') {
+        const cls = fileTypeClass(entry.fileType || '', entry.name);
+        const badge = document.createElement('div');
+        badge.className = 'file-type-badge' + (cls ? ' ' + cls : '');
+        badge.textContent = fileTypeLabel(entry.fileType || '', entry.name);
+        const nameEl = document.createElement('div');
+        nameEl.className = 'file-card-name';
+        nameEl.textContent = entry.name;
+        const sizeEl = document.createElement('div');
+        sizeEl.className = 'file-card-size';
+        sizeEl.textContent = formatFileSize(entry.size);
+        thumb.append(badge, nameEl, sizeEl);
+        card.append(seq, del, selChk, thumb);
+      } else if (entry.type === 'section') {
+        if (entry.collapsed) card.classList.add('collapsed');
+
+        // Purely a visual indicator — clicks fall through (pointer-events:none) to
+        // the section card, whose click handler does the actual collapse toggle.
+        const toggle = document.createElement('span');
+        toggle.className = 'section-toggle';
+        toggle.setAttribute('aria-hidden', 'true');
+        toggle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+
+        const title = document.createElement('div');
+        title.className = 'section-title';
+        title.contentEditable = 'true';
+        title.textContent = entry.title || '';
+        title.addEventListener('input', () => {
+          entry.title = title.textContent;
+          pushHistoryDebounced();
+        });
+        title.addEventListener('blur', () => {
+          entry.title = title.textContent.trim();
+          flushPendingHistory();
+        });
+        title.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); title.blur(); }
+        });
+
+        const count = document.createElement('span');
+        count.className = 'section-count';
+
+        const move = document.createElement('button');
+        move.type = 'button';
+        move.className = 'section-move';
+        move.title = 'Drag to move this section (with all its cards)';
+        move.setAttribute('aria-label', 'Move section');
+        move.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.7"/><circle cx="15" cy="5" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="19" r="1.7"/><circle cx="15" cy="19" r="1.7"/></svg>`;
+
+        card.append(seq, toggle, title, count, move, del);
+      } else {
+        if (entry.text && entry.text.trim()) {
+          thumb.innerHTML = entry.text;
+        } else {
+          thumb.textContent = 'Empty text card — click to edit';
+          thumb.style.color = 'var(--text-3)';
+        }
+        card.append(seq, del, selChk, thumb);
+      }
+
+      card.addEventListener('click', (e) => {
+        if (performance.now() < suppressClickUntil) return; // click synthesised right after a drag
+        if (e.target.closest('.card-seq, .card-del, .section-title, .section-move')) return;
+        if (entry.type === 'section') {
+          // Click anywhere on the section bar (except its editable title) collapses/expands it.
+          entry.collapsed = !entry.collapsed;
+          card.classList.toggle('collapsed', entry.collapsed);
+          applyCollapseStates();
+          pushHistory();
+          return;
+        }
+        openModal(entry.id);
+      });
+
+      attachDrag(card);
+      return card;
+    }
+
+    function refreshCard(entry) {
+      const card = CARDS.querySelector(`.card[data-id="${entry.id}"]`);
+      if (!card) return;
+      const seq = card.querySelector('.card-seq').textContent;
+      const newCard = buildCard(entry);
+      newCard.querySelector('.card-seq').textContent = seq;
+      card.replaceWith(newCard);
+    }
+
+    // ── Drag & drop — pointer-based live reorder ──────────────────────────────────
+    // Native HTML5 drag-and-drop proved unreliable here: the wrapping grid, the
+    // contentEditable section titles, and drops landing in empty space (end of a
+    // row / after the last tile) frequently produced no move at all. We instead
+    // drive reordering with pointer events, which fire consistently everywhere and
+    // let us live-move the dragged card into place.
+    const DRAG_THRESHOLD = 5;          // px of travel before a press becomes a drag
+    let dragState = null;              // { id, card, startX, startY, pointerId, active, changed, orderBefore }
+    let suppressClickUntil = 0;        // perf timestamp; click handlers ignore the post-drag click
+
+    // The card we'd insertBefore for the given pointer position (null = append at end).
+    // Walks cards in DOM (reading) order, which matches the visual top-left→bottom-right
+    // flow, so the trailing space of a row resolves to the start of the next row — i.e.
+    // the end of the current section — and anywhere past the last card appends.
+    function insertionRef(x, y, dragging) {
+      const cards = [...CARDS.querySelectorAll('.card')];
+      for (const card of cards) {
+        if (card === dragging) continue;
+        const r = card.getBoundingClientRect();
+        if (y < r.top) return card;                                 // pointer is above a later row
+        if (y <= r.bottom && x < r.left + r.width / 2) return card; // before this card within its row
+      }
+      return null;                                                  // past everything → append
+    }
+
+    // The DOM nodes that make up a section: its header card plus every node that
+    // follows up to (but not including) the next section header — i.e. all of the
+    // section's cards (and any insert buttons). Used to move a section as one block.
+    function sectionBlockNodes(headerCard) {
+      const nodes = [headerCard];
+      let n = headerCard.nextSibling;
+      while (n && !(n.nodeType === 1 && n.classList && n.classList.contains('section-card'))) {
+        nodes.push(n);
+        n = n.nextSibling;
+      }
+      return nodes;
+    }
+
+    // When dragging a whole section, snap only to section boundaries so sections
+    // never interleave: returns the section header to insert the block before, or
+    // null to append the block at the very end.
+    function sectionDropRef(y, draggedHeader) {
+      const headers = [...CARDS.querySelectorAll('.card.section-card')];
+      for (const h of headers) {
+        if (h === draggedHeader) continue;
+        const r = h.getBoundingClientRect();
+        if (y < r.top + r.height / 2) return h;
+      }
+      return null;
+    }
+
+    function onDragMove(e) {
+      if (!dragState) return;
+      const card = dragState.card;
+      if (!dragState.active) {
+        if (Math.hypot(e.clientX - dragState.startX, e.clientY - dragState.startY) < DRAG_THRESHOLD) return;
+        // Promote to an active drag.
+        dragState.active = true;
+        dragState.orderBefore = items.map((it) => it.id).join(',');
+        // Drop focus from any card field (e.g. a section title being edited) so it
+        // doesn't keep a text selection / caret while we move the card.
+        const ae = document.activeElement;
+        if (ae && ae.blur && ae.closest && ae.closest('.card')) ae.blur();
+        CARDS.querySelectorAll('.card-insertor').forEach(el => el.remove());
+        card.classList.add('dragging');
+        if (dragState.isSection) {
+          // Dim the section's member cards so it's clear they travel with the header.
+          for (const n of sectionBlockNodes(card)) {
+            if (n !== card && n.classList && n.classList.contains('card')) n.classList.add('section-block-dragging');
+          }
+        }
+        document.body.style.userSelect = 'none';
+        try { card.setPointerCapture(dragState.pointerId); } catch (_) {}
+      }
+      e.preventDefault();
+
+      if (dragState.isSection) {
+        const ref = sectionDropRef(e.clientY, card);            // a section header, or null = end
+        const block = sectionBlockNodes(card);
+        const last = block[block.length - 1];
+        // Skip when the block already sits immediately before the target.
+        if (ref !== card && last.nextSibling !== ref) {
+          for (const n of block) CARDS.insertBefore(n, ref);    // ref === null → append, order preserved
+          dragState.changed = true;
+        }
+        return;
+      }
+
+      const ref = insertionRef(e.clientX, e.clientY, card);
+      // Only touch the DOM when the position actually changes (avoids jitter).
+      if (ref !== card && ref !== card.nextSibling) {
+        CARDS.insertBefore(card, ref); // ref === null → append
+        dragState.changed = true;
+      }
+    }
+
+    function onDragEnd() {
+      window.removeEventListener('pointermove', onDragMove);
+      window.removeEventListener('pointerup', onDragEnd);
+      window.removeEventListener('pointercancel', onDragEnd);
+      const st = dragState;
+      dragState = null;
+      if (!st || !st.active) return; // a plain click: leave it to the card's click handler
+      st.card.classList.remove('dragging');
+      CARDS.querySelectorAll('.section-block-dragging').forEach((c) => c.classList.remove('section-block-dragging'));
+      document.body.style.userSelect = '';
+      try { st.card.releasePointerCapture(st.pointerId); } catch (_) {}
+      syncOrder();
+      reindex();
+      syncInsertors();
+      if (st.orderBefore !== items.map((it) => it.id).join(',')) pushHistory();
+      // A click is synthesised after pointerup; swallow it so we don't open the modal.
+      suppressClickUntil = performance.now() + 300;
+    }
+
+    function attachDrag(card) {
+      card.addEventListener('pointerdown', (e) => {
+        if (e.button !== 0 || dragState) return;                       // left button only
+        if (e.target.closest('.card-del, .card-select-chk, .section-toggle')) return; // controls handle their own clicks
+        // The section title is an editable text field — never start a drag from it,
+        // so clicking/selecting always works.
+        if (e.target.closest('.section-title')) return;
+        // A section is moved (with all its cards) only via its move handle; pressing
+        // elsewhere on the bar is reserved for collapse/expand.
+        const isSection = card.classList.contains('section-card');
+        if (isSection && !e.target.closest('.section-move')) return;
+        dragState = {
+          id: card.dataset.id, card, isSection,
+          startX: e.clientX, startY: e.clientY,
+          pointerId: e.pointerId, active: false, changed: false, orderBefore: '',
+        };
+        window.addEventListener('pointermove', onDragMove);
+        window.addEventListener('pointerup', onDragEnd);
+        window.addEventListener('pointercancel', onDragEnd);
+      });
+    }
+
+    // ── Modal ─────────────────────────────────────────────────────────────────────
+    function openModal(id, autoFocus = true) {
+      const entry = items.find((s) => s.id === id);
+      if (!entry || entry.type === 'section') return;
+      MODAL._innerUndo = null;
+      MODAL._innerRedo = null;
+      openItemId = id;
+
+      // Position within the entry's own section (numbering restarts at each section).
+      let idx = 0;
+      for (const it of items) {
+        if (it.type === 'section') { idx = 0; continue; }
+        idx++;
+        if (it === entry) break;
+      }
+      MODAL_SEQ.textContent = String(idx).padStart(2, '0');
+      MODAL_KIND.textContent = entry.type === 'text' ? 'Text card' : entry.type === 'file' ? fileTypeLabel(entry.fileType || '', entry.name) + ' file' : 'Screenshot';
+      MODAL_BODY.innerHTML = '';
+      MODAL_BODY.classList.remove('split');
+
+      if (entry.type === 'image') {
+        MODAL_BODY.classList.add('split');
+
+        const left = document.createElement('div');
+        left.className = 'modal-left';
+
+        // Annotation toolbar
+        const tb = document.createElement('div');
+        tb.className = 'annot-toolbar';
+        const mkTool = (tool, label) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.className = 'annot-tool'; b.dataset.tool = tool;
+          b.textContent = label;
+          return b;
+        };
+        const mkColor = (color) => {
+          const b = document.createElement('button');
+          b.type = 'button'; b.className = 'annot-color'; b.dataset.color = color;
+          b.style.background = color;
+          b.setAttribute('aria-label', `Color ${color}`);
+          return b;
+        };
+        const pencilBtn = mkTool('pencil', '✏ Pencil');
+        const highlightBtn = mkTool('highlight', '🖍 Highlighter');
+        const rectBtn = mkTool('rect', '▭ Rectangle');
+        const textBtn = mkTool('text', 'T Text');
+        const eraserBtn = mkTool('eraser', '⌫ Eraser');
+        const sep1 = document.createElement('span'); sep1.className = 'annot-sep';
+        const colorBtns = ANNOT_COLORS.map(mkColor);
+        const sep2 = document.createElement('span'); sep2.className = 'annot-sep';
+        const undoBtn = document.createElement('button');
+        undoBtn.type = 'button'; undoBtn.className = 'annot-clear';
+        undoBtn.textContent = '↶ Undo'; undoBtn.title = 'Undo annotation (Ctrl+Z)';
+        const redoBtn = document.createElement('button');
+        redoBtn.type = 'button'; redoBtn.className = 'annot-clear';
+        redoBtn.textContent = '↷ Redo'; redoBtn.title = 'Redo annotation (Ctrl+Y)';
+        const sep3 = document.createElement('span'); sep3.className = 'annot-sep';
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button'; clearBtn.className = 'annot-clear'; clearBtn.textContent = 'Clear';
+        tb.append(pencilBtn, highlightBtn, rectBtn, textBtn, eraserBtn, sep1, ...colorBtns, sep2, undoBtn, redoBtn, sep3, clearBtn);
+
+        // ── Per-image annotation history (independent of outer items history) ──
+        const annotSnap = () => JSON.parse(JSON.stringify(entry.annotations || []));
+        const annotApply = (snap) => {
+          entry.annotations = JSON.parse(JSON.stringify(snap));
+          entry._cKey = null; entry._cUrl = null;
+          redraw();
+          refreshCard(entry);
+        };
+        let annotHistory = [annotSnap()];
+        let annotIndex = 0;
+        const refreshAnnotBtns = () => {
+          undoBtn.disabled = annotIndex <= 0;
+          redoBtn.disabled = annotIndex >= annotHistory.length - 1;
+        };
+        const pushAnnot = () => {
+          annotHistory = annotHistory.slice(0, annotIndex + 1);
+          annotHistory.push(annotSnap());
+          if (annotHistory.length > 50) annotHistory.shift();
+          annotIndex = annotHistory.length - 1;
+          refreshAnnotBtns();
+        };
+        const undoAnnot = () => {
+          if (annotIndex <= 0) return;
+          annotIndex--;
+          annotApply(annotHistory[annotIndex]);
+          refreshAnnotBtns();
+        };
+        const redoAnnot = () => {
+          if (annotIndex >= annotHistory.length - 1) return;
+          annotIndex++;
+          annotApply(annotHistory[annotIndex]);
+          refreshAnnotBtns();
+        };
+        undoBtn.addEventListener('click', undoAnnot);
+        redoBtn.addEventListener('click', redoAnnot);
+        refreshAnnotBtns();
+
+        MODAL._innerUndo = undoAnnot;
+        MODAL._innerRedo = redoAnnot;
+
+        // Stage: image + overlay canvas
+        const stage = document.createElement('div');
+        stage.className = 'annot-stage';
+        const img = document.createElement('img');
+        img.src = entry.dataURL;
+        img.alt = 'Screenshot';
+        img.draggable = false;
+        const canvas = document.createElement('canvas');
+        canvas.className = 'annot-canvas';
+        stage.append(img, canvas);
+
+        left.append(tb, stage);
+
+        // Tool UI
+        const refreshToolUI = () => {
+          pencilBtn.classList.toggle('active', annotTool === 'pencil');
+          highlightBtn.classList.toggle('active', annotTool === 'highlight');
+          rectBtn.classList.toggle('active', annotTool === 'rect');
+          textBtn.classList.toggle('active', annotTool === 'text');
+          eraserBtn.classList.toggle('active', annotTool === 'eraser');
+          colorBtns.forEach((b) => b.classList.toggle('active', b.dataset.color === annotColor));
+        };
+        pencilBtn.addEventListener('click', () => { annotTool = 'pencil'; refreshToolUI(); });
+        highlightBtn.addEventListener('click', () => { annotTool = 'highlight'; refreshToolUI(); });
+        rectBtn.addEventListener('click', () => { annotTool = 'rect'; refreshToolUI(); });
+        textBtn.addEventListener('click', () => { annotTool = 'text'; refreshToolUI(); });
+        eraserBtn.addEventListener('click', () => { annotTool = 'eraser'; refreshToolUI(); });
+        colorBtns.forEach((b) => b.addEventListener('click', () => { annotColor = b.dataset.color; refreshToolUI(); }));
+        refreshToolUI();
+
+        // Drawing
+        let preview = null, dragging = false, startX = 0, startY = 0;
+        const ctx = canvas.getContext('2d');
+        const redraw = () => {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          drawAnnotations(ctx, entry.annotations || [], canvas.width, canvas.height);
+          if (preview) drawAnnotations(ctx, [preview], canvas.width, canvas.height);
+        };
+        const syncCanvas = () => {
+          if (!img.complete || !img.naturalWidth) return;
+          const ir = img.getBoundingClientRect();
+          const sr = stage.getBoundingClientRect();
+          canvas.style.left = (ir.left - sr.left) + 'px';
+          canvas.style.top = (ir.top - sr.top) + 'px';
+          canvas.style.width = ir.width + 'px';
+          canvas.style.height = ir.height + 'px';
+          canvas.width = Math.max(1, Math.round(ir.width));
+          canvas.height = Math.max(1, Math.round(ir.height));
+          redraw();
+        };
+        const pos = (e) => {
+          const r = canvas.getBoundingClientRect();
+          return [
+            Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)),
+            Math.max(0, Math.min(1, (e.clientY - r.top) / r.height)),
+          ];
+        };
+        const openTextEditor = (rectIn, initial, onCommit) => {
+          const rect = { ...rectIn };
+          const ta = document.createElement('textarea');
+          ta.className = 'annot-text-editor';
+          ta.value = initial || '';
+          const cl = parseFloat(canvas.style.left) || 0;
+          const ct = parseFloat(canvas.style.top) || 0;
+          const cwPx = canvas.getBoundingClientRect().width;
+          const chPx = canvas.getBoundingClientRect().height;
+          const taLeftPx = cl + rect.x * cwPx;
+          ta.style.left = taLeftPx + 'px';
+          ta.style.top = (ct + rect.y * chPx) + 'px';
+          const fontFrac = TEXT_FONT_FRAC;
+          const fontPx = Math.max(10, fontFrac * chPx);
+          ta.style.fontSize = fontPx + 'px';
+          ta.style.color = annotColor;
+          stage.appendChild(ta);
+          const maxRightPx = cl + cwPx - 4;
+          const autosize = () => {
+            const prevFont = ctx.font;
+            ctx.font = `${fontPx}px Inter, sans-serif`;
+            const lines = (ta.value || '').split('\n');
+            const longest = lines.reduce((m, l) => Math.max(m, ctx.measureText(l || ' ').width), 0);
+            ctx.font = prevFont;
+            const padding = fontPx * 0.8 + 6;
+            const wantW = Math.max(60, longest + padding);
+            const widthPx = Math.min(wantW, Math.max(60, maxRightPx - taLeftPx));
+            ta.style.width = widthPx + 'px';
+            ta.style.height = 'auto';
+            const heightPx = Math.max(ta.scrollHeight, fontPx + 8);
+            ta.style.height = heightPx + 'px';
+            rect.w = widthPx / cwPx;
+            rect.h = heightPx / chPx;
+          };
+          autosize();
+          ta.addEventListener('input', autosize);
+          ta.focus();
+          ta.select();
+          let done = false;
+          const onOutside = (ev) => {
+            if (!ta.contains(ev.target)) commit();
+          };
+          const cleanup = () => {
+            document.removeEventListener('pointerdown', onOutside, true);
+            ta.remove();
+          };
+          const commit = () => {
+            if (done) return; done = true;
+            const txt = ta.value;
+            cleanup();
+            onCommit(txt, fontFrac, rect);
+          };
+          const cancel = () => {
+            if (done) return; done = true;
+            cleanup();
+            onCommit(null, fontFrac, rect);
+          };
+          ta.addEventListener('blur', commit);
+          ta.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+          });
+          // Defer attaching so the click that opened the editor isn't caught.
+          setTimeout(() => {
+            if (!done) document.addEventListener('pointerdown', onOutside, true);
+          }, 0);
+        };
+
+        const renderedTextH = (a) => {
+          const w = canvas.width, h = canvas.height;
+          if (!w || !h) return a.h;
+          const m = measureTextBox(ctx, a, w, h);
+          return Math.max(a.h * h, m.contentH) / h;
+        };
+        const hitText = (x, y) => {
+          const anns = entry.annotations || [];
+          for (let i = anns.length - 1; i >= 0; i--) {
+            const a = anns[i];
+            if (a.type !== 'text') continue;
+            if (x < a.x || x > a.x + a.w) continue;
+            const eh = renderedTextH(a);
+            if (y >= a.y && y <= a.y + eh) return a;
+          }
+          return null;
+        };
+
+        const ERASER_PX = 14;
+        const segDist = (px, py, x1, y1, x2, y2) => {
+          const dx = x2 - x1, dy = y2 - y1;
+          const len2 = dx * dx + dy * dy;
+          if (len2 === 0) return Math.hypot(px - x1, py - y1);
+          let t = ((px - x1) * dx + (py - y1) * dy) / len2;
+          t = Math.max(0, Math.min(1, t));
+          return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+        };
+        const eraseAt = (px, py) => {
+          const r = ERASER_PX;
+          const w = canvas.width, h = canvas.height;
+          const anns = entry.annotations || [];
+          for (let i = anns.length - 1; i >= 0; i--) {
+            const a = anns[i];
+            if (a.type === 'text') {
+              const rh = renderedTextH(a);
+              const ax = a.x * w, ay = a.y * h;
+              const aw = a.w * w, ah = rh * h;
+              if (px >= ax - r && px <= ax + aw + r && py >= ay - r && py <= ay + ah + r) {
+                anns.splice(i, 1); return true;
+              }
+            } else if (a.type === 'rect') {
+              const ax = a.x * w, ay = a.y * h;
+              const aw = a.w * w, ah = a.h * h;
+              if (px >= ax - r && px <= ax + aw + r && py >= ay - r && py <= ay + ah + r) {
+                anns.splice(i, 1); return true;
+              }
+            } else if ((a.type === 'free' || a.type === 'highlight') && a.points && a.points.length) {
+              const pts = a.points;
+              const rr = a.type === 'highlight' ? r + (a.widthFrac || 0) * w * 0.5 : r;
+              if (pts.length === 1) {
+                if (Math.hypot(px - pts[0][0] * w, py - pts[0][1] * h) <= rr) {
+                  anns.splice(i, 1); return true;
+                }
+                continue;
+              }
+              for (let j = 0; j < pts.length - 1; j++) {
+                const x1 = pts[j][0] * w, y1 = pts[j][1] * h;
+                const x2 = pts[j + 1][0] * w, y2 = pts[j + 1][1] * h;
+                if (segDist(px, py, x1, y1, x2, y2) <= rr) {
+                  anns.splice(i, 1); return true;
+                }
+              }
+            }
+          }
+          return false;
+        };
+
+        canvas.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          const [x, y] = pos(e);
+
+          if (annotTool === 'eraser') {
+            canvas.setPointerCapture(e.pointerId);
+            let changed = false;
+            const tryErase = (fx, fy) => {
+              if (eraseAt(fx * canvas.width, fy * canvas.height)) {
+                changed = true;
+                entry._cKey = null; entry._cUrl = null;
+                redraw();
+              }
+            };
+            tryErase(x, y);
+            const onMove = (ev) => {
+              const [nx, ny] = pos(ev);
+              tryErase(nx, ny);
+            };
+            const onUp = () => {
+              canvas.removeEventListener('pointermove', onMove);
+              canvas.removeEventListener('pointerup', onUp);
+              canvas.removeEventListener('pointercancel', onUp);
+              if (changed) {
+                refreshCard(entry);
+                pushAnnot();
+              }
+            };
+            canvas.addEventListener('pointermove', onMove);
+            canvas.addEventListener('pointerup', onUp);
+            canvas.addEventListener('pointercancel', onUp);
+            return;
+          }
+
+          if (annotTool === 'text') {
+            // 1) Text body hit → drag-to-move OR click-to-edit
+            const a = hitText(x, y);
+            if (a) {
+              canvas.setPointerCapture(e.pointerId);
+              const origX = a.x, origY = a.y;
+              const sx = x, sy = y;
+              let moved = false;
+              const onMove = (ev) => {
+                const [nx, ny] = pos(ev);
+                const dx = nx - sx, dy = ny - sy;
+                if (!moved && Math.abs(dx) + Math.abs(dy) < 0.008) return;
+                moved = true;
+                a.x = Math.max(0, Math.min(1 - a.w, origX + dx));
+                a.y = Math.max(0, Math.min(1 - a.h, origY + dy));
+                entry._cKey = null; entry._cUrl = null;
+                redraw();
+              };
+              const onUp = () => {
+                canvas.removeEventListener('pointermove', onMove);
+                canvas.removeEventListener('pointerup', onUp);
+                canvas.removeEventListener('pointercancel', onUp);
+                if (moved) {
+                  refreshCard(entry);
+                  pushAnnot();
+                } else {
+                  openTextEditor({ x: a.x, y: a.y, w: a.w, h: a.h }, a.text, (newText, _ff, finalRect) => {
+                    if (newText === null) return;
+                    a.text = newText;
+                    a.h = finalRect.h;
+                    entry._cKey = null; entry._cUrl = null;
+                    refreshCard(entry);
+                    pushAnnot();
+                    redraw();
+                  });
+                }
+              };
+              canvas.addEventListener('pointermove', onMove);
+              canvas.addEventListener('pointerup', onUp);
+              canvas.addEventListener('pointercancel', onUp);
+              return;
+            }
+            // 2) Empty area → create new text box at click point
+            const defaultW = 0.3;
+            const defaultH = TEXT_FONT_FRAC * 1.6;
+            const rect = {
+              x: Math.max(0, Math.min(1 - defaultW, x)),
+              y: Math.max(0, Math.min(1 - defaultH, y)),
+              w: defaultW,
+              h: defaultH,
+            };
+            openTextEditor(rect, '', (newText, fontFrac, finalRect) => {
+              if (newText === null || !newText.trim()) return;
+              ensureAnnotations(entry).push({
+                type: 'text', color: annotColor, fontFrac,
+                x: finalRect.x, y: finalRect.y, w: finalRect.w, h: finalRect.h, text: newText,
+              });
+              entry._cKey = null; entry._cUrl = null;
+              refreshCard(entry);
+              pushAnnot();
+              redraw();
+            });
+            return;
+          }
+
+          // Pencil / highlighter / rectangle: drag to draw
+          canvas.setPointerCapture(e.pointerId);
+          dragging = true;
+          startX = x; startY = y;
+          const widthFrac = ANNOT_PX / Math.max(1, canvas.width);
+          const hlWidthFrac = (ANNOT_PX * 5) / Math.max(1, canvas.width);
+          if (annotTool === 'pencil') {
+            preview = { type: 'free', color: annotColor, widthFrac, points: [[x, y]] };
+          } else if (annotTool === 'highlight') {
+            preview = { type: 'highlight', color: annotColor, widthFrac: hlWidthFrac, alpha: 0.35, points: [[x, y]] };
+          } else {
+            preview = { type: 'rect', color: annotColor, widthFrac, x, y, w: 0, h: 0 };
+          }
+          redraw();
+        });
+        canvas.addEventListener('pointermove', (e) => {
+          if (!dragging) {
+            if (annotTool === 'text') {
+              const [hx, hy] = pos(e);
+              if (hitText(hx, hy)) canvas.style.cursor = 'move';
+              else canvas.style.cursor = 'text';
+            } else if (annotTool === 'eraser') {
+              canvas.style.cursor = 'cell';
+            } else {
+              canvas.style.cursor = 'crosshair';
+            }
+            return;
+          }
+          if (!preview) return;
+          const [x, y] = pos(e);
+          if (preview.type === 'free' || preview.type === 'highlight') {
+            preview.points.push([x, y]);
+          } else {
+            preview.x = Math.min(startX, x);
+            preview.y = Math.min(startY, y);
+            preview.w = Math.abs(x - startX);
+            preview.h = Math.abs(y - startY);
+          }
+          redraw();
+        });
+        const finish = () => {
+          if (!dragging) return;
+          dragging = false;
+          if (preview) {
+            const keep =
+              (preview.type === 'free' && preview.points.length > 1) ||
+              (preview.type === 'highlight' && preview.points.length > 1) ||
+              (preview.type === 'rect' && (preview.w > 0.005 || preview.h > 0.005));
+            if (keep) {
+              ensureAnnotations(entry).push(preview);
+              entry._cKey = null; entry._cUrl = null;
+              refreshCard(entry);
+              pushAnnot();
+            }
+          }
+          preview = null;
+          redraw();
+        };
+        canvas.addEventListener('pointerup', finish);
+        canvas.addEventListener('pointercancel', finish);
+
+        clearBtn.addEventListener('click', () => {
+          if (!(entry.annotations || []).length) return;
+          entry.annotations = [];
+          entry._cKey = null; entry._cUrl = null;
+          redraw();
+          refreshCard(entry);
+          pushAnnot();
+        });
+
+        if (img.complete && img.naturalWidth) syncCanvas();
+        else img.addEventListener('load', syncCanvas);
+
+        if (MODAL._currentRO) MODAL._currentRO.disconnect();
+        MODAL._currentRO = new ResizeObserver(syncCanvas);
+        MODAL._currentRO.observe(stage);
+        MODAL._currentRO.observe(img);
+
+        const resizer = document.createElement('div');
+        resizer.className = 'modal-resizer';
+        resizer.title = 'Drag to resize';
+        resizer.innerHTML = '<span class="grip"></span>';
+
+        const right = document.createElement('div');
+        right.className = 'modal-right';
+
+        const label = document.createElement('label');
+        label.className = 'desc-label';
+        label.textContent = 'Description';
+
+        // ── Highlight toolbar ──
+        const hlBarImg = document.createElement('div');
+        hlBarImg.className = 'highlight-toolbar';
+        const hlBtnImg = document.createElement('button');
+        hlBtnImg.type = 'button';
+        hlBtnImg.className = 'highlight-btn';
+        hlBtnImg.title = 'Highlight selection (yellow)';
+        hlBtnImg.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
+        hlBtnImg.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          document.execCommand('hiliteColor', false, '#FEF08A');
+          entry.caption = capEditor.innerHTML;
+          refreshCard(entry);
+          pushHistoryDebounced();
+        });
+        const clearBtnImg = document.createElement('button');
+        clearBtnImg.type = 'button';
+        clearBtnImg.className = 'highlight-btn hl-clear';
+        clearBtnImg.title = 'Remove highlight';
+        clearBtnImg.textContent = '✕';
+        clearBtnImg.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          document.execCommand('hiliteColor', false, 'transparent');
+          entry.caption = capEditor.innerHTML;
+          refreshCard(entry);
+          pushHistoryDebounced();
+        });
+        hlBarImg.append(hlBtnImg, clearBtnImg);
+
+        const capEditor = document.createElement('div');
+        capEditor.className = 'desc-rich';
+        capEditor.contentEditable = 'true';
+        capEditor.dataset.placeholder = 'Write a description for this screenshot…';
+        capEditor.innerHTML = entry.caption || '';
+        capEditor.addEventListener('input', () => {
+          entry.caption = capEditor.innerHTML;
+          refreshCard(entry);
+          pushHistoryDebounced();
+        });
+        capEditor.addEventListener('blur', flushPendingHistory);
+
+        right.append(label, hlBarImg, capEditor);
+        MODAL_BODY.append(left, resizer, right);
+        attachResizer(resizer, left, right);
+        if (autoFocus) setTimeout(() => capEditor.focus(), 50);
+      } else if (entry.type === 'text') {
+        const right = document.createElement('div');
+        right.className = 'modal-right solo';
+
+        const label = document.createElement('label');
+        label.className = 'desc-label';
+        label.textContent = 'Text content';
+
+        // ── Highlight toolbar ──
+        const hlBar = document.createElement('div');
+        hlBar.className = 'highlight-toolbar';
+
+        const hlBtn = document.createElement('button');
+        hlBtn.type = 'button';
+        hlBtn.className = 'highlight-btn';
+        hlBtn.title = 'Highlight selection (yellow)';
+        hlBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
+        hlBtn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          document.execCommand('hiliteColor', false, '#FEF08A');
+          entry.text = editor.innerHTML;
+          refreshCard(entry);
+          pushHistoryDebounced();
+        });
+
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'highlight-btn hl-clear';
+        clearBtn.title = 'Remove highlight';
+        clearBtn.textContent = '✕';
+        clearBtn.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          document.execCommand('hiliteColor', false, 'transparent');
+          entry.text = editor.innerHTML;
+          refreshCard(entry);
+          pushHistoryDebounced();
+        });
+
+        hlBar.append(hlBtn, clearBtn);
+
+        // ── Rich text editor ──
+        const editor = document.createElement('div');
+        editor.className = 'desc-rich';
+        editor.contentEditable = 'true';
+        editor.dataset.placeholder = 'Write a note, heading, or any text to place between screenshots…';
+        editor.innerHTML = entry.text || '';
+        editor.addEventListener('input', () => {
+          entry.text = editor.innerHTML;
+          refreshCard(entry);
+          pushHistoryDebounced();
+        });
+        editor.addEventListener('blur', flushPendingHistory);
+
+        right.append(label, hlBar, editor);
+        MODAL_BODY.append(right);
+        if (autoFocus) setTimeout(() => editor.focus(), 50);
+      }
+
+      if (entry.type === 'file') {
+        const cls = fileTypeClass(entry.fileType || '', entry.name);
+        const view = document.createElement('div');
+        view.className = 'file-modal-view';
+
+        const badge = document.createElement('div');
+        badge.className = 'file-modal-badge' + (cls ? ' ' + cls : '');
+        badge.textContent = fileTypeLabel(entry.fileType || '', entry.name);
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'file-modal-name';
+        nameEl.textContent = entry.name;
+
+        const meta = document.createElement('div');
+        meta.className = 'file-modal-meta';
+        meta.textContent = formatFileSize(entry.size) + (entry.fileType ? ' · ' + entry.fileType : '');
+
+        const dl = document.createElement('a');
+        dl.className = 'file-modal-download';
+        dl.href = entry.dataURL;
+        dl.download = entry.name;
+        dl.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download`;
+
+        view.append(badge, nameEl, meta, dl);
+        MODAL_BODY.append(view);
+      }
+
+      MODAL.classList.remove('hidden');
+      updateNavButtons();
+    }
+
+    function closeModal() {
+      MODAL.classList.add('hidden');
+      openItemId = null;
+      if (MODAL._currentRO) { MODAL._currentRO.disconnect(); MODAL._currentRO = null; }
+      MODAL._innerUndo = null;
+      MODAL._innerRedo = null;
+      if (MODAL._returnToPreview) {
+        const k = MODAL._returnToPreview;
+        MODAL._returnToPreview = null;
+        setTimeout(() => openExportPreview(k), 0);
+      }
+    }
+
+    function navigateModal(delta) {
+      if (!openItemId) return;
+      const i = items.findIndex((s) => s.id === openItemId);
+      const next = i + delta;
+      if (i === -1 || next < 0 || next >= items.length) return;
+      if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+      openModal(items[next].id, false);
+    }
+
+    function updateNavButtons() {
+      const i = items.findIndex((s) => s.id === openItemId);
+      MODAL_PREV.disabled = i <= 0;
+      MODAL_NEXT.disabled = i === -1 || i >= items.length - 1;
+    }
+
+    function attachResizer(resizer, left, right) {
+      let dragging = false;
+      const onMove = (e) => {
+        if (!dragging) return;
+        const containerRect = MODAL_BODY.getBoundingClientRect();
+        const minPx = 200;
+        let leftPx = e.clientX - containerRect.left;
+        leftPx = Math.max(minPx, Math.min(containerRect.width - minPx, leftPx));
+        const pct = (leftPx / containerRect.width) * 100;
+        left.style.flex = `0 0 ${pct}%`;
+        right.style.flex = `1 1 auto`;
+      };
+      const onUp = () => {
+        dragging = false;
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('mousemove', onMove);
+        window.removeEventListener('mouseup', onUp);
+      };
+      resizer.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        dragging = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('mouseup', onUp);
+      });
+      resizer.addEventListener('dblclick', () => {
+        left.style.flex = '';
+        right.style.flex = '';
+      });
+    }
+
+    // ── State helpers ─────────────────────────────────────────────────────────────
+    function removeItem(id) {
+      const i = items.findIndex((s) => s.id === id);
+      if (i !== -1) items.splice(i, 1);
+      selectedIds.delete(id);
+      updateSelectionBar();
+      CARDS.querySelector(`.card[data-id="${id}"]`)?.remove();
+      // Also remove the orphaned insertor that was after this card
+      reindex();
+      syncInsertors();
+      updateUI();
+      pushHistory();
+    }
+
+    function reindex() {
+      let n = 0;
+      CARDS.querySelectorAll('.card').forEach((c) => {
+        if (c.classList.contains('section-card')) { n = 0; return; } // each section restarts numbering at 1
+        n++;
+        const seqEl = c.querySelector('.card-seq');
+        if (seqEl) seqEl.textContent = String(n).padStart(2, '0');
+      });
+    }
+
+    function syncOrder() {
+      const order = [...CARDS.querySelectorAll('.card')].map((c) => c.dataset.id);
+      items.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+    }
+
+    function updateUI() {
+      const n = items.length;
+      const has = n > 0;
+
+      BTN_PDF.disabled = !has;
+      BTN_DOCX.disabled = !has;
+      BTN_CLEAR.disabled = !has;
+      BTN_SAVE.disabled = !has;
+
+      EMPTY_STATE.classList.toggle('hidden', has);
+      PASTE_STRIP.classList.toggle('hidden', !has);
+      if (COUNT_BADGE) { // optional — the badge markup may be commented out
+        COUNT_BADGE.classList.toggle('hidden', !has);
+        COUNT_BADGE.textContent = `${n} item${n !== 1 ? 's' : ''}`;
+      }
+
+      if (has) { reindex(); syncInsertors(); }
+    }
+
+    function clearAll() {
+      clearSelection();
+      items.length = 0;
+      CARDS.innerHTML = '';
+      updateUI();
+      pushHistory();
+    }
+
+    // ── Project Save / Open ───────────────────────────────────────────────────────
+    function saveProject() {
+      if (!items.length) return;
+      const name = askFilename('Save project as:', `collage-project-${Date.now()}`, 'json');
+      if (!name) return;
+      const cleanItems = items.map((it) => {
+        const { _cKey, _cUrl, ...rest } = it;
+        return rest;
+      });
+      const payload = {
+        format: 'screenshot-collage',
+        version: 1,
+        savedAt: new Date().toISOString(),
+        items: cleanItems,
+      };
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+      download(blob, name);
+      toast('Project saved.');
+    }
+
+    function handleProjectFile(e) {
+      const file = e.target.files?.[0];
+      e.target.value = ''; // allow re-selecting the same file later
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (data?.format !== 'screenshot-collage' || !Array.isArray(data.items)) {
+            throw new Error('Not a valid project file');
+          }
+          if (items.length &&
+            !confirm('Replace the current cards with the opened project?')) {
+            return;
+          }
+          loadProject(data.items);
+          resetHistory();
+          toast('Project loaded.');
+        } catch {
+          toast('Could not open project — file is invalid.');
+        }
+      };
+      reader.onerror = () => toast('Could not read the file.');
+      reader.readAsText(file);
+    }
+
+    function loadProject(saved) {
+      clearSelection();
+      items.length = 0;
+      CARDS.innerHTML = '';
+      for (const raw of saved) {
+        if (!raw || (raw.type !== 'image' && raw.type !== 'text' && raw.type !== 'file' && raw.type !== 'section')) continue;
+        let entry;
+        if (raw.type === 'image') {
+          entry = {
+            id: raw.id || crypto.randomUUID(), type: 'image',
+            dataURL: raw.dataURL, imageWidth: raw.imageWidth, imageHeight: raw.imageHeight,
+            caption: raw.caption || '',
+            annotations: Array.isArray(raw.annotations) ? raw.annotations : []
+          };
+        } else if (raw.type === 'file') {
+          entry = {
+            id: raw.id || crypto.randomUUID(), type: 'file',
+            name: raw.name || 'file', fileType: raw.fileType || '', size: raw.size || 0, dataURL: raw.dataURL || ''
+          };
+        } else if (raw.type === 'section') {
+          entry = { id: raw.id || crypto.randomUUID(), type: 'section', title: raw.title || '', collapsed: !!raw.collapsed };
+        } else {
+          entry = { id: raw.id || crypto.randomUUID(), type: 'text', text: raw.text || '' };
+        }
+        items.push(entry);
+        CARDS.appendChild(buildCard(entry));
+      }
+      reindex();
+      syncInsertors();
+      updateUI();
+    }
+
+    // ── Export Preview ────────────────────────────────────────────────────────────
+    const PREVIEW_MODAL = document.getElementById('preview-modal');
+    const PREVIEW_BODY = document.getElementById('preview-body');
+    const PREVIEW_SUB = document.getElementById('preview-sub');
+    const PREVIEW_CONFIRM = document.getElementById('preview-confirm');
+    let _previewKind = null;
+
+    async function openExportPreview(kind) {
+      if (!items.length) return;
+      _previewKind = kind;
+      PREVIEW_CONFIRM.textContent = kind === 'pdf' ? 'Confirm & Export PDF' : 'Confirm & Export Word';
+      PREVIEW_MODAL.classList.remove('hidden');
+      document.addEventListener('keydown', _previewKeyHandler);
+      await renderPreviewBody();
+    }
+
+    // Build (or rebuild) the preview list. Re-run after a delete or a
+    // section collapse/expand so the modal reflects the current items[].
+    async function renderPreviewBody() {
+      PREVIEW_SUB.textContent = _previewKind === 'pdf'
+        ? `Review your collage before exporting to PDF (${items.length} item${items.length === 1 ? '' : 's'}).`
+        : `Review your collage before exporting to Word (${items.length} item${items.length === 1 ? '' : 's'}).`;
+      PREVIEW_BODY.innerHTML = '<div class="preview-loading">Building preview…</div>';
+
+      const frag = document.createDocumentFragment();
+      let previewStepNum = 0;
+      let collapsed = false;
+      for (let i = 0; i < items.length; i++) {
+        const entry = items[i];
+
+        if (entry.type === 'section') {
+          previewStepNum = 0; // each section restarts numbering at 1
+          collapsed = !!entry.collapsed;
+          // Count the cards that belong to this section (up to the next header)
+          // for the "N items" badge shown while collapsed.
+          let count = 0;
+          for (let j = i + 1; j < items.length && items[j].type !== 'section'; j++) count++;
+          frag.appendChild(buildPreviewSection(entry, count));
+          continue;
+        }
+
+        // Cards under a collapsed section are hidden in the preview (they are
+        // still exported — collapse is purely an organisational view toggle).
+        if (collapsed) continue;
+
+        previewStepNum++;
+        const seq = String(previewStepNum).padStart(2, '0');
+        const card = document.createElement('div');
+        card.className = 'preview-item';
+        card.dataset.id = entry.id;
+        card.title = 'Click to edit this step';
+        card.addEventListener('click', () => editFromPreview(entry.id));
+        const label = document.createElement('div');
+        label.className = 'preview-label';
+        label.textContent = 'Step ' + seq + ' · click to edit';
+        card.appendChild(label);
+
+        const del = document.createElement('button');
+        del.type = 'button';
+        del.className = 'pv-del';
+        del.title = 'Delete this step';
+        del.setAttribute('aria-label', 'Delete');
+        del.textContent = '×'; // × multiplication sign
+        del.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteFromPreview(entry.id);
+        });
+        card.appendChild(del);
+
+        if (entry.type === 'image') {
+          const img = document.createElement('img');
+          const src = (entry.annotations || []).length
+            ? await composeImage(entry)
+            : entry.dataURL;
+          img.src = src;
+          img.alt = '';
+          card.appendChild(img);
+
+          const cap = document.createElement('div');
+          const txt = htmlToText(entry.caption);
+          cap.className = 'preview-caption' + (txt ? '' : ' empty');
+          if (txt) cap.innerHTML = entry.caption;
+          else cap.textContent = '(no description)';
+          card.appendChild(cap);
+        } else if (entry.type === 'file') {
+          const cls = fileTypeClass(entry.fileType || '', entry.name);
+          const fb = document.createElement('div');
+          fb.className = 'preview-text';
+          const badge = document.createElement('span');
+          badge.className = 'file-type-badge' + (cls ? ' ' + cls : '');
+          badge.style.display = 'inline-block';
+          badge.style.marginBottom = '6px';
+          badge.textContent = fileTypeLabel(entry.fileType || '', entry.name);
+          const fn = document.createElement('div');
+          fn.style.fontSize = '12px';
+          fn.style.marginTop = '4px';
+          fn.textContent = entry.name;
+          fb.append(badge, fn);
+          card.appendChild(fb);
+        } else {
+          const t = document.createElement('div');
+          const txt = htmlToText(entry.text);
+          t.className = 'preview-text' + (txt ? '' : ' empty');
+          if (txt) t.innerHTML = entry.text;
+          else t.textContent = '(empty text card)';
+          card.appendChild(t);
+        }
+        frag.appendChild(card);
+      }
+      PREVIEW_BODY.innerHTML = '';
+      PREVIEW_BODY.appendChild(frag);
+    }
+
+    // A clickable section header in the preview — toggles its collapsed state
+    // (kept in sync with the board) and shows a count badge.
+    function buildPreviewSection(entry, count) {
+      const collapsed = !!entry.collapsed;
+      const sec = document.createElement('div');
+      sec.className = 'preview-section' + (collapsed ? ' collapsed' : '');
+      sec.dataset.id = entry.id;
+      sec.title = collapsed ? 'Click to expand' : 'Click to collapse';
+
+      const chev = document.createElement('span');
+      chev.className = 'pv-chevron';
+      chev.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+
+      const title = document.createElement('span');
+      title.className = 'pv-sec-title';
+      title.textContent = entry.title || 'Section';
+
+      const cnt = document.createElement('span');
+      cnt.className = 'pv-sec-count';
+      cnt.textContent = `${count} item${count === 1 ? '' : 's'}`;
+
+      sec.append(chev, title, cnt);
+      sec.addEventListener('click', () => {
+        entry.collapsed = !entry.collapsed;
+        // Mirror the change onto the board card so both views agree.
+        const boardCard = CARDS.querySelector(`.card.section-card[data-id="${entry.id}"]`);
+        if (boardCard) boardCard.classList.toggle('collapsed', entry.collapsed);
+        applyCollapseStates();
+        pushHistory();
+        renderPreviewBody();
+      });
+      return sec;
+    }
+
+    function deleteFromPreview(id) {
+      removeItem(id); // updates items[], the board DOM, and history
+      if (!items.length) { closeExportPreview(); return; }
+      renderPreviewBody();
+    }
+
+    function closeExportPreview() {
+      PREVIEW_MODAL.classList.add('hidden');
+      PREVIEW_BODY.innerHTML = '';
+      _previewKind = null;
+      document.removeEventListener('keydown', _previewKeyHandler);
+    }
+
+    function confirmExportPreview() {
+      const kind = _previewKind;
+      closeExportPreview();
+      if (kind === 'pdf') exportAsPDF();
+      else if (kind === 'docx') exportAsDOCX();
+    }
+
+    function _previewKeyHandler(e) {
+      if (e.key === 'Escape') { e.preventDefault(); closeExportPreview(); }
+    }
+
+    function editFromPreview(id) {
+      const kind = _previewKind;
+      PREVIEW_MODAL.classList.add('hidden');
+      document.removeEventListener('keydown', _previewKeyHandler);
+      MODAL._returnToPreview = kind;
+      openModal(id);
+    }
+
+    // Bundle the generated document with the original inserted files. If any files were
+    // inserted, the download becomes a .zip containing the document plus an attachments/
+    // folder (works in any browser / managed Office — no embedded-attachment support needed).
+    // Otherwise the plain document is downloaded as before.
+    async function exportBundle(docName, docBlob) {
+      const fileItems = items.filter((e) => e.type === 'file' && e.dataURL);
+      if (!fileItems.length) { download(docBlob, docName); return; }
+      if (typeof JSZip === 'undefined') { download(docBlob, docName); toast('Files could not be bundled (JSZip not loaded) — document saved without attachments.'); return; }
+
+      const bundle = new JSZip();
+      bundle.file(docName, docBlob);
+      const used = new Set();
+      for (const fe of fileItems) {
+        let base = (fe.name || 'attachment').replace(/[\\/:*?"<>|]+/g, '_');
+        let finalName = base, n = 2;
+        while (used.has(finalName.toLowerCase())) {
+          const dot = base.lastIndexOf('.');
+          finalName = dot > 0 ? `${base.slice(0, dot)}-${n}${base.slice(dot)}` : `${base}-${n}`;
+          n++;
+        }
+        used.add(finalName.toLowerCase());
+        bundle.file(`attachments/${finalName}`, dataURLtoBytes(fe.dataURL));
+      }
+      const blob = await bundle.generateAsync({ type: 'blob' });
+      const zipName = docName.replace(/\.[^.]+$/, '') + '.zip';
+      download(blob, zipName);
+      toast(`Saved ${zipName} — document + ${fileItems.length} file${fileItems.length > 1 ? 's' : ''} in the attachments folder.`);
+    }
+
+    // ── PDF Export (jsPDF) ────────────────────────────────────────────────────────
+    async function exportAsPDF() {
+      if (!items.length) return;
+      if (typeof window.jspdf === 'undefined') {
+        toast('jsPDF library not loaded — check your internet connection.');
+        return;
+      }
+      const name = askFilename('Save PDF as:', `collage-${Date.now()}`, 'pdf');
+      if (!name) return;
+
+      showOverlay('Generating PDF…');
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+
+        const pageW = doc.internal.pageSize.getWidth();
+        const pageH = doc.internal.pageSize.getHeight();
+        const margin = 40;
+        const contentW = pageW - margin * 2;
+        let y = margin;
+
+        const ensureSpace = (h) => {
+          if (y + h > pageH - margin) { doc.addPage(); y = margin; }
+        };
+
+        let pdfStepNum = 0;
+        for (let i = 0; i < items.length; i++) {
+          const entry = items[i];
+          // const label = (entry.type === 'image' ? 'Step ' : 'Note ') + seq;
+
+          if (entry.type === 'section') {
+            pdfStepNum = 0; // each section restarts numbering at 1
+            const secTitle = entry.title || 'Section';
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(14);
+            const titleLines = doc.splitTextToSize(secTitle, contentW - 24);
+            const padV = 9, lineH = 17;
+            const bandH = padV * 2 + 14 + (titleLines.length - 1) * lineH;
+            if (y > margin) y += 12;
+            ensureSpace(bandH + 14);
+            // light-indigo background band with a thin border + indigo left accent bar
+            doc.setFillColor(238, 242, 255);   // #EEF2FF
+            doc.setDrawColor(199, 210, 254);    // #C7D2FE
+            doc.setLineWidth(0.5);
+            doc.roundedRect(margin, y, contentW, bandH, 3, 3, 'FD');
+            doc.setFillColor(79, 70, 229);      // #4F46E5 accent bar
+            doc.rect(margin, y, 4, bandH, 'F');
+            doc.setTextColor(67, 56, 202);      // #4338CA title
+            doc.text(titleLines, margin + 16, y + padV + 11);
+            y += bandH + 14;
+            continue;
+          }
+
+          pdfStepNum++;
+          const label = 'Step ' + String(pdfStepNum).padStart(2, '0');
+
+          ensureSpace(28);
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(11);
+          doc.setTextColor(79, 70, 229);
+          doc.text(label, margin, y + 12);
+          y += 22;
+
+          if (entry.type === 'image') {
+            const imgEl = await loadImg(entry.dataURL);
+            const pngURL = (entry.annotations || []).length
+              ? await composeImage(entry)
+              : toPngDataURL(imgEl);
+            const maxH = pageH - margin * 2 - 60;
+            let w = Math.min(contentW, imgEl.naturalWidth);
+            let h = w * imgEl.naturalHeight / imgEl.naturalWidth;
+            if (h > maxH) { h = maxH; w = h * imgEl.naturalWidth / imgEl.naturalHeight; }
+
+            ensureSpace(h + 24);
+            doc.addImage(pngURL, 'PNG', margin + (contentW - w) / 2, y, w, h, undefined, 'FAST');
+            y += h + 10;
+
+            const isEmpty = !htmlToText(entry.caption);
+            const cap = htmlToText(entry.caption) || '(no description)';
+            doc.setFont('helvetica', isEmpty ? 'italic' : 'normal');
+            doc.setFontSize(10.5);
+            if (isEmpty) doc.setTextColor(156, 163, 175);
+            else doc.setTextColor(55, 65, 81);
+
+            const lines = doc.splitTextToSize(cap, contentW);
+            const blockH = lines.length * 13;
+            ensureSpace(blockH + 18);
+            doc.text(lines, margin, y + 11);
+            y += blockH + 18;
+          } else if (entry.type === 'file') {
+            const ftLabel = fileTypeLabel(entry.fileType || '', entry.name || '');
+            const fname = entry.name || 'Attachment';
+            const fsize = formatFileSize(entry.size);
+
+            ensureSpace(52);
+            // Colored badge-like label
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(255, 255, 255);
+            const badgeW = doc.getTextWidth(ftLabel) + 10;
+            const badgeColor = { 'PDF': [220,38,38], 'Word': [37,99,235], 'Excel': [22,163,74], 'PowerPoint': [234,88,12], 'Outlook': [2,132,199] };
+            const [br, bg, bb] = badgeColor[ftLabel] || [79,70,229];
+            doc.setFillColor(br, bg, bb);
+            doc.roundedRect(margin, y, badgeW, 14, 2, 2, 'F');
+            doc.text(ftLabel, margin + 5, y + 10);
+            y += 18;
+
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(17, 24, 39);
+            const nameLines = doc.splitTextToSize(fname, contentW);
+            doc.text(nameLines, margin, y + 11);
+            y += nameLines.length * 14;
+
+            if (fsize) {
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(9.5);
+              doc.setTextColor(107, 114, 128);
+              doc.text(fsize, margin, y + 10);
+              y += 16;
+            }
+            // Reference to the bundled file.
+            doc.setFont('helvetica', 'italic');
+            doc.setFontSize(9);
+            doc.setTextColor(107, 114, 128);
+            doc.text('See attachments/' + fname + ' in this .zip bundle.', margin, y + 10);
+            y += 20;
+          } else {
+            const isEmpty = !htmlToText(entry.text);
+            const txt = htmlToText(entry.text) || '(empty text card)';
+            doc.setFont('helvetica', isEmpty ? 'italic' : 'normal');
+            doc.setFontSize(11);
+            if (isEmpty) doc.setTextColor(156, 163, 175);
+            else doc.setTextColor(17, 24, 39);
+
+            const lines = doc.splitTextToSize(txt, contentW);
+            const blockH = lines.length * 14;
+            ensureSpace(blockH + 18);
+            doc.text(lines, margin, y + 12);
+            y += blockH + 18;
+          }
+        }
+
+        // Inserted files travel alongside the PDF in a .zip bundle (see exportBundle).
+        await exportBundle(name, doc.output('blob'));
+      } catch (err) {
+        toast('PDF export failed: ' + err.message);
+        console.error(err);
+      } finally {
+        hideOverlay();
+      }
+    }
+
+    function loadImg(src) {
+      return new Promise((res, rej) => {
+        const i = new Image();
+        i.onload = () => res(i);
+        i.onerror = rej;
+        i.src = src;
+      });
+    }
+
+    function toPngDataURL(imgEl) {
+      const c = document.createElement('canvas');
+      c.width = imgEl.naturalWidth || imgEl.width || 1;
+      c.height = imgEl.naturalHeight || imgEl.height || 1;
+      c.getContext('2d').drawImage(imgEl, 0, 0);
+      return c.toDataURL('image/png');
+    }
+
+    // ── DOCX Export ───────────────────────────────────────────────────────────────
+    async function exportAsDOCX() {
+      if (!items.length) return;
+      if (typeof JSZip === 'undefined') {
+        toast('JSZip library not loaded — check your internet connection.');
+        return;
+      }
+      const name = askFilename('Save Word document as:', `collage-${Date.now()}`, 'docx');
+      if (!name) return;
+
+      showOverlay('Generating Word document…');
+      try {
+        const zip = new JSZip();
+
+        const imageItems = items.filter((e) => e.type === 'image');
+        const rels = imageItems.map((entry, i) => ({
+          entry, rId: `rId${i + 1}`, filename: `image${i + 1}.png`,
+        }));
+
+        for (const { entry, filename } of rels) {
+          const imgEl = await loadImg(entry.dataURL);
+          const pngURL = (entry.annotations || []).length
+            ? await composeImage(entry)
+            : toPngDataURL(imgEl);
+          zip.file(`word/media/${filename}`, urlToBytes(pngURL), { binary: true });
+        }
+
+        // Inserted files are NOT embedded as OLE objects (Edge/Chrome + managed Office
+        // can't open those). They travel alongside the .docx in a .zip bundle instead;
+        // the document body still shows each file as a labelled badge reference.
+        zip.file('[Content_Types].xml', xmlContentTypes());
+        zip.file('_rels/.rels', xmlRootRels());
+        zip.file('word/_rels/document.xml.rels', xmlDocRels(rels));
+        zip.file('word/document.xml', xmlDocument(rels));
+
+        const blob = await zip.generateAsync({
+          type: 'blob',
+          mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
+        await exportBundle(name, blob);
+      } catch (err) {
+        toast('Word export failed: ' + err.message);
+        console.error(err);
+      } finally {
+        hideOverlay();
+      }
+    }
+
+    function xmlContentTypes() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml"  ContentType="application/xml"/>
+  <Default Extension="png"  ContentType="image/png"/>
+  <Override PartName="/word/document.xml"
+    ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`;
+    }
+
+    function xmlRootRels() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1"
+    Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument"
+    Target="word/document.xml"/>
+</Relationships>`;
+    }
+
+    function xmlDocRels(rels) {
+      const xml = rels.map(({ rId, filename }) =>
+        `  <Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${filename}"/>`
+      ).join('\n');
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+${xml}
+</Relationships>`;
+    }
+
+    function xmlDocument(rels) {
+      const relByEntryId = new Map(rels.map((r) => [r.entry.id, r]));
+      let pid = 0;
+
+      let docxStepNum = 0;
+      const body = items.map((entry, i) => {
+        if (entry.type === 'section') {
+          docxStepNum = 0; // each section restarts numbering at 1
+          const secTitle = xmlEsc(entry.title || 'Section');
+          // Shaded light-indigo band with a thick indigo left accent bar (matches the app).
+          return `
+  <w:p>
+    <w:pPr>
+      <w:pBdr>
+        <w:top w:val="single" w:sz="4" w:space="4" w:color="C7D2FE"/>
+        <w:left w:val="single" w:sz="24" w:space="10" w:color="4F46E5"/>
+        <w:bottom w:val="single" w:sz="4" w:space="4" w:color="C7D2FE"/>
+        <w:right w:val="single" w:sz="4" w:space="4" w:color="C7D2FE"/>
+      </w:pBdr>
+      <w:shd w:val="clear" w:color="auto" w:fill="EEF2FF"/>
+      <w:spacing w:before="280" w:after="160" w:line="276" w:lineRule="auto"/>
+      <w:ind w:left="144" w:right="144"/>
+    </w:pPr>
+    <w:r>
+      <w:rPr><w:b/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="4338CA"/></w:rPr>
+      <w:t xml:space="preserve">${secTitle}</w:t>
+    </w:r>
+  </w:p>`;
+        }
+
+        docxStepNum++;
+        const seq = docxStepNum;
+        // const seqLabel = (entry.type === 'image' ? 'Step ' : 'Note ') + String(seq).padStart(2, '0');
+        const seqLabel = 'Step ' + String(seq).padStart(2, '0');
+        const seqPara = `
+  <w:p>
+    <w:pPr><w:spacing w:before="120" w:after="60"/></w:pPr>
+    <w:r>
+      <w:rPr><w:b/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="4F46E5"/></w:rPr>
+      <w:t xml:space="preserve">${xmlEsc(seqLabel)}</w:t>
+    </w:r>
+  </w:p>`;
+        if (entry.type === 'image') {
+          pid++;
+          const r = relByEntryId.get(entry.id);
+          const { cx, cy } = toEMU(entry.imageWidth, entry.imageHeight);
+          const capText = htmlToText(entry.caption) || '(no description)';
+          const isGray = !htmlToText(entry.caption);
+          const color = isGray ? '9CA3AF' : '374151';
+          const italic = isGray ? '<w:i/><w:iCs/>' : '';
+
+          return `${seqPara}
+  <w:p>
+    <w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
+    <w:r>
+      <w:drawing>
+        <wp:inline distT="0" distB="0" distL="0" distR="0">
+          <wp:extent cx="${cx}" cy="${cy}"/>
+          <wp:effectExtent l="0" t="0" r="0" b="0"/>
+          <wp:docPr id="${pid}" name="Screenshot ${seq}"/>
+          <wp:cNvGraphicFramePr>
+            <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+          </wp:cNvGraphicFramePr>
+          <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+            <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+              <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                <pic:nvPicPr>
+                  <pic:cNvPr id="${pid}" name="Screenshot ${seq}"/>
+                  <pic:cNvPicPr><a:picLocks noChangeAspect="1" noChangeArrowheads="1"/></pic:cNvPicPr>
+                </pic:nvPicPr>
+                <pic:blipFill>
+                  <a:blip r:embed="${r.rId}"/>
+                  <a:stretch><a:fillRect/></a:stretch>
+                </pic:blipFill>
+                <pic:spPr bwMode="auto">
+                  <a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm>
+                  <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                </pic:spPr>
+              </pic:pic>
+            </a:graphicData>
+          </a:graphic>
+        </wp:inline>
+      </w:drawing>
+    </w:r>
+  </w:p>
+  <w:p>
+    <w:pPr><w:spacing w:before="100" w:after="360"/></w:pPr>
+    <w:r>
+      <w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="${color}"/>${italic}</w:rPr>
+      <w:t xml:space="preserve">${xmlEsc(capText)}</w:t>
+    </w:r>
+  </w:p>`;
+        }
+
+        // File card — labelled badge that references the file in the attachments/ folder.
+        if (entry.type === 'file') {
+          const ftLabel = fileTypeLabel(entry.fileType || '', entry.name || '');
+          const fname = entry.name || 'Attachment';
+          const fsize = entry.size ? formatFileSize(entry.size) : '';
+          return `${seqPara}
+  <w:p>
+    <w:pPr><w:spacing w:before="40" w:after="40"/></w:pPr>
+    <w:r>
+      <w:rPr><w:b/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="111827"/></w:rPr>
+      <w:t xml:space="preserve">📎 [${xmlEsc(ftLabel)}] ${xmlEsc(fname)}${fsize ? '  ·  ' + xmlEsc(fsize) : ''}</w:t>
+    </w:r>
+  </w:p>
+  <w:p>
+    <w:pPr><w:spacing w:before="0" w:after="240"/></w:pPr>
+    <w:r>
+      <w:rPr><w:i/><w:iCs/><w:sz w:val="18"/><w:szCs w:val="18"/><w:color w:val="6B7280"/></w:rPr>
+      <w:t xml:space="preserve">See attachments/${xmlEsc(fname)} in this .zip bundle.</w:t>
+    </w:r>
+  </w:p>`;
+        }
+
+        // Text card
+        const txt = htmlToText(entry.text) || '(empty text card)';
+        const isGray = !htmlToText(entry.text);
+        const color = isGray ? '9CA3AF' : '111827';
+        const italic = isGray ? '<w:i/><w:iCs/>' : '';
+        const runs = txt.split('\n').map((line, idx) => {
+          const br = idx > 0 ? '<w:br/>' : '';
+          return `${br}<w:t xml:space="preserve">${xmlEsc(line)}</w:t>`;
+        }).join('');
+
+        return `${seqPara}
+  <w:p>
+    <w:pPr><w:spacing w:before="40" w:after="240"/></w:pPr>
+    <w:r>
+      <w:rPr><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="${color}"/>${italic}</w:rPr>
+      ${runs}
+    </w:r>
+  </w:p>`;
+      }).join('\n');
+
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"
+  xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+${body}
+    <w:sectPr>
+      <w:pgSz w:w="12240" w:h="15840"/>
+      <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"
+               w:header="720" w:footer="720" w:gutter="0"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
+    }
+
+    function toEMU(naturalW, naturalH) {
+      const MAX = 5943600;
+      const PX = 9525;
+      let cx = naturalW * PX, cy = naturalH * PX;
+      if (cx > MAX) { cy = Math.round(cy * MAX / cx); cx = MAX; }
+      return { cx, cy };
+    }
+
+    function xmlEsc(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+    }
+
+    function htmlToText(html) {
+      const d = document.createElement('div');
+      d.innerHTML = html || '';
+      return (d.innerText || d.textContent || '').trim();
+    }
+
+    // ── Utilities ─────────────────────────────────────────────────────────────────
+    function dataURLtoBytes(dataURL) {
+      const base64 = (dataURL || '').split(',')[1] || '';
+      const binary = atob(base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    function readFile(file) {
+      return new Promise((res, rej) => {
+        const r = new FileReader();
+        r.onload = (e) => res(e.target.result);
+        r.onerror = rej;
+        r.readAsDataURL(file);
+      });
+    }
+
+    function imgDimensions(dataURL) {
+      return new Promise((res) => {
+        const i = new Image();
+        i.onload = () => res({ width: i.naturalWidth, height: i.naturalHeight });
+        i.src = dataURL;
+      });
+    }
+
+    function urlToBytes(dataURL) {
+      const b64 = dataURL.split(',')[1];
+      const binary = atob(b64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      return bytes;
+    }
+
+    function askFilename(message, defaultBase, ext) {
+      const raw = window.prompt(message, defaultBase);
+      if (raw === null) return null;
+      let name = raw.trim();
+      if (!name) name = defaultBase;
+      name = name.replace(/[\\/:*?"<>|]+/g, '_');
+      const dot = '.' + ext.toLowerCase();
+      if (!name.toLowerCase().endsWith(dot)) name += dot;
+      return name;
+    }
+
+    function download(blob, name) {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    }
+
+    function showOverlay(msg) {
+      OVERLAY_TEXT.textContent = msg;
+      OVERLAY.classList.remove('hidden');
+    }
+
+    function hideOverlay() {
+      OVERLAY.classList.add('hidden');
+    }
+
+    let _toastTimer = null;
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(_toastTimer);
+      _toastTimer = setTimeout(() => el.classList.remove('show'), 3500);
+    }
+
+  </script>
+</body>
+
+</html>
