@@ -3695,7 +3695,6 @@
           const txt = htmlToText(entry.caption);
           cap.className = 'preview-caption' + (txt ? '' : ' empty');
           if (txt) cap.innerHTML = entry.caption;
-          else cap.textContent = '(no description)';
           card.appendChild(cap);
         } else if (entry.type === 'file') {
           const cls = fileTypeClass(entry.fileType || '', entry.name);
@@ -3899,7 +3898,7 @@
             y += h + 10;
 
             const isEmpty = !htmlToText(entry.caption);
-            const cap = htmlToText(entry.caption) || '(no description)';
+            const cap = htmlToText(entry.caption);
             doc.setFont('helvetica', isEmpty ? 'italic' : 'normal');
             doc.setFontSize(10.5);
             if (isEmpty) doc.setTextColor(156, 163, 175);
