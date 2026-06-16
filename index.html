@@ -4,11 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Screenshot Collage</title>
+  <title>Pasteboard</title>
+  <!-- Inline data-URI favicon (matches the navbar brand mark) so it survives the
+       offline "Download app" copy — no external icon file required. -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiByeD0iNSIgZmlsbD0iIzRGNDZFNSIvPjxnIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjgiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iNSIgeT0iNSIgd2lkdGg9IjE0IiBoZWlnaHQ9IjE0IiByeD0iMyIvPjxjaXJjbGUgY3g9IjkuMyIgY3k9IjkuMyIgcj0iMS4yIi8+PHBvbHlsaW5lIHBvaW50cz0iMTkgMTQgMTUgMTAgNi41IDE4LjUiLz48L2c+PC9zdmc+">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
   <style>
     /* ── Reset & Base ──────────────────────────────────────────── */
     *,
@@ -196,7 +198,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 60px 24px;
+      padding: 36px 24px;
     }
 
     #drop-zone {
@@ -253,6 +255,14 @@
     .shortcut-label {
       color: var(--text-3);
       margin-left: 4px;
+    }
+
+    .empty-or {
+      font-size: 12px;
+      color: var(--text-3);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 2px 0;
     }
 
     /* ── Paste Strip ───────────────────────────────────────────── */
@@ -710,6 +720,38 @@
     }
     .section-move:hover { background: rgba(79, 70, 229, 0.12); color: #4338CA; }
     .section-move:active { cursor: grabbing; }
+
+    /* Pin button — marks a section as the destination for new pastes */
+    .section-pin {
+      flex-shrink: 0;
+      margin-left: 4px;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: #818CF8;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 0;
+    }
+    .section-pin:hover { background: rgba(79, 70, 229, 0.12); color: #4338CA; }
+    .section-pin.active { background: #4F46E5; color: #fff; }
+    /* The pinned section reads as the active paste target */
+    .card.section-card.paste-target {
+      border-color: #4F46E5;
+      border-left-width: 4px;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.35);
+      background: linear-gradient(90deg, #E0E7FF 0%, #EDE9FE 100%);
+    }
+    /* Paste-strip hint showing the current target section */
+    .paste-target-label {
+      color: #4F46E5;
+      font-weight: 600;
+      margin-left: 4px;
+    }
     /* On a section header the controls sit inline at the right, so the delete
        button flows next to the move handle instead of floating top-right. */
     .card.section-card .card-del {
@@ -841,10 +883,7 @@
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
-    }
-    .desc-rich:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow);
+      caret-shape: block; 
     }
     .desc-rich:empty::before {
       content: attr(data-placeholder);
@@ -856,10 +895,15 @@
       border-top: 1px solid var(--border-light);
       padding: 7px 10px;
       font-size: 11.5px;
+      line-height: 1.4;
       color: var(--text-2);
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
       overflow: hidden;
       text-overflow: ellipsis;
+      overflow-wrap: anywhere;
       background: #FAFBFC;
       flex-shrink: 0;
     }
@@ -1430,6 +1474,239 @@
       font-size: 13px;
     }
 
+    /* ── PDF details modal ─────────────────────────────────────── */
+    #pdf-meta-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 990;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 14, 27, 0.55);
+      backdrop-filter: blur(4px);
+    }
+    #pdf-meta-modal.hidden { display: none; }
+
+    .pdf-meta-panel {
+      background: var(--surface);
+      width: 100%;
+      max-width: 420px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .pdf-meta-panel h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-1);
+      margin: 0;
+      letter-spacing: -0.2px;
+    }
+
+    .pdf-meta-sub {
+      font-size: 12.5px;
+      color: var(--text-2, #6B7280);
+      margin: -8px 0 2px;
+    }
+
+    .pdf-meta-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pdf-meta-field span {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .pdf-meta-field input {
+      padding: 9px 12px;
+      font-size: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text-1);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .pdf-meta-field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .pdf-meta-check {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      font-size: 13px;
+      color: var(--text-1);
+      line-height: 1.4;
+      cursor: pointer;
+    }
+    .pdf-meta-check input { margin-top: 1px; flex-shrink: 0; cursor: pointer; }
+
+    .pdf-meta-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .pdf-meta-footer button {
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--bg);
+      color: var(--text-1);
+      transition: background 0.15s;
+    }
+    .pdf-meta-footer button:hover { background: var(--border-light); }
+    .pdf-meta-footer button.primary {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .pdf-meta-footer button.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+    /* ── How-to guide ──────────────────────────────────────────── */
+    #btn-help {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 12px;
+      padding: 5px 11px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--text-2, #6B7280);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    #btn-help:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-glow); }
+
+    .empty-help-link {
+      margin-top: 6px;
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .empty-help-link:hover { text-decoration: underline; }
+
+    #help-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 990;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(10, 14, 27, 0.55);
+      backdrop-filter: blur(4px);
+      padding: 24px;
+    }
+    #help-modal.hidden { display: none; }
+
+    .help-panel {
+      background: var(--surface);
+      width: 100%;
+      max-width: 680px;
+      max-height: 90vh;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .help-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .help-header h2 { font-size: 17px; font-weight: 700; color: var(--text-1); margin: 0; letter-spacing: -0.2px; }
+    .help-sub { font-size: 12.5px; color: var(--text-2, #6B7280); margin-top: 3px; line-height: 1.4; }
+
+    .help-close {
+      flex-shrink: 0;
+      width: 30px; height: 30px;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text-2);
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .help-close:hover { background: #DC2626; border-color: #EF4444; color: #fff; }
+
+    .help-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 24px 16px;
+    }
+
+    .help-sec { margin-top: 18px; }
+    .help-sec h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0 0 8px;
+      letter-spacing: 0.2px;
+    }
+    .help-sec ul { margin: 0; padding-left: 18px; }
+    .help-sec li { font-size: 13.5px; color: var(--text-1); line-height: 1.7; }
+    .help-sec li b { font-weight: 700; }
+    .help-sec code {
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 12px;
+    }
+
+    .help-keys { list-style: none; padding-left: 0; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+    .help-keys li { font-size: 12.5px; color: var(--text-2); }
+
+    .help-footer {
+      padding: 14px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      background: var(--surface);
+    }
+    .help-footer button.primary {
+      padding: 9px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1.5px solid var(--accent);
+      background: var(--accent);
+      color: #fff;
+      transition: background 0.15s;
+    }
+    .help-footer button.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
     /* ── Export Overlay ────────────────────────────────────────── */
     #export-overlay {
       position: fixed;
@@ -1579,6 +1856,14 @@
         </svg>
       </div>
       <span id="app-name">Pasteboard</span>
+      <button id="btn-help" type="button" title="How to use this app" aria-label="How to use">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" />
+          <line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      </button>
     </div>
 
     <div id="toolbar-right">
@@ -1663,6 +1948,15 @@
         </svg>
         Export Word
       </button>
+      <button id="btn-download-app" class="btn-secondary" title="Download this app as a single HTML file to use offline">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+        Download app
+      </button>
       <button id="btn-clear-all" class="btn-ghost" disabled>Clear all</button>
     </div>
   </header>
@@ -1689,6 +1983,16 @@
           <span class="shortcut-label">Paste screenshot</span>
         </div>
       </div>
+      <div class="empty-or">or</div>
+      <button id="btn-add-text-empty" class="btn-secondary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Add a text card
+      </button>
+      <button id="btn-help-empty" type="button" class="empty-help-link">New here? Read the how-to guide →</button>
     </div>
   </section>
 
@@ -1702,6 +2006,7 @@
     Paste screenshot or file
     <kbd>Ctrl+V</kbd>
     <span class="strip-tip">· Drag tiles to reorder · Click a tile to edit</span>
+    <span id="paste-target-label" class="paste-target-label hidden"></span>
   </div>
 
   <!-- ── Cards (horizontal flex-wrap grid) ── -->
@@ -1744,13 +2049,110 @@
       <div class="preview-header">
         <div>
           <h2 id="preview-title">Export preview</h2>
-          <div class="preview-sub" id="preview-sub">Review your collage before exporting.</div>
+          <div class="preview-sub" id="preview-sub">Review your pasteboard before exporting.</div>
         </div>
       </div>
       <div class="preview-body" id="preview-body"></div>
       <div class="preview-footer">
         <button id="preview-cancel" type="button">Cancel</button>
         <button id="preview-confirm" type="button" class="primary">Confirm &amp; Export</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── How-to guide modal ── -->
+  <div id="help-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="help-panel">
+      <div class="help-header">
+        <div>
+          <h2 id="help-title">How to use Pasteboard</h2>
+          <div class="help-sub">Arrange screenshots into a board, annotate them, and export to PDF or Word — all in your browser.</div>
+        </div>
+        <button id="help-close" type="button" class="help-close" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      </div>
+      <div class="help-body">
+
+        <section class="help-sec">
+          <h3>1 · Add content</h3>
+          <ul>
+            <li><b>Paste a screenshot</b> — capture with Snipping Tool / <kbd>PrtScn</kbd>, then press <kbd>Ctrl</kbd>+<kbd>V</kbd> anywhere on the page.</li>
+            <li><b>Paste files</b> — copy PDFs, Word, Excel, PowerPoint, or Outlook <code>.msg</code> files in File Explorer and paste; each becomes an attachment card. Multiple files at once keep their order.</li>
+            <li><b>Text cards</b> — paste plain text, click <b>Add a text card</b>, or the <b>+</b> button between cards. URLs you type become clickable links in the exports.</li>
+          </ul>
+        </section>
+
+        <section class="help-sec">
+          <h3>2 · Organize with sections</h3>
+          <ul>
+            <li><b>Add Section</b> creates a divider; every card after it belongs to that section until the next divider.</li>
+            <li>Click a section bar to <b>collapse / expand</b> it; the navbar button collapses or expands all at once.</li>
+            <li><b>Pin a section</b> (the 📌 button on its header) to make pastes land at the end of <i>that</i> section instead of the page bottom.</li>
+            <li><b>Reorder</b> by dragging any card; drag a section's handle to move the whole section with its cards.</li>
+            <li><b>Multi-select</b> with each card's checkbox, then <b>Group as Section</b> or <b>Delete</b> the whole batch (one undo reverses it).</li>
+          </ul>
+        </section>
+
+        <section class="help-sec">
+          <h3>3 · Edit & annotate</h3>
+          <ul>
+            <li>Click any card to open it. Use <kbd>←</kbd> / <kbd>→</kbd> to move between cards (across sections too).</li>
+            <li>Add a <b>caption</b> under an image, or edit text-card content.</li>
+            <li>On images, use the toolbar tools — <b>Pencil</b>, <b>Highlighter</b>, <b>Rectangle</b>, <b>Text</b>, <b>Eraser</b> — with per-tool color. Annotation <b>↶ Undo / ↷ Redo</b> is independent of the main undo.</li>
+          </ul>
+        </section>
+
+        <section class="help-sec">
+          <h3>4 · Export & save</h3>
+          <ul>
+            <li><b>Export PDF</b> — review the preview, then set a file name &amp; author for the cover page (with created date). Optionally attach the editable project <code>.json</code> inside the PDF.</li>
+            <li><b>Export Word</b> — builds a <code>.docx</code>; inserted files travel alongside in a <code>.zip</code> bundle.</li>
+            <li><b>Save</b> / <b>Open</b> — store your work as a <code>.json</code> project and reload it later to keep editing.</li>
+            <li><b>Download app</b> — save this whole app as one HTML file to use offline.</li>
+          </ul>
+        </section>
+
+        <section class="help-sec">
+          <h3>Keyboard shortcuts</h3>
+          <ul class="help-keys">
+            <li><kbd>Ctrl</kbd>+<kbd>V</kbd> Paste</li>
+            <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> Undo</li>
+            <li><kbd>Ctrl</kbd>+<kbd>Y</kbd> Redo</li>
+            <li><kbd>←</kbd> / <kbd>→</kbd> Previous / next card</li>
+            <li><kbd>Esc</kbd> Close a dialog</li>
+          </ul>
+        </section>
+
+      </div>
+      <div class="help-footer">
+        <button id="help-done" type="button" class="primary">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PDF details modal (filename / author / include JSON) ── -->
+  <div id="pdf-meta-modal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="pdf-meta-title">
+    <div class="pdf-meta-panel">
+      <h2 id="pdf-meta-title">Export to PDF</h2>
+      <p class="pdf-meta-sub">These details appear on the PDF's cover page.</p>
+      <label class="pdf-meta-field">
+        <span>File name</span>
+        <input type="text" id="pdf-meta-name" placeholder="pasteboard" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="pdf-meta-field">
+        <span>Author</span>
+        <input type="text" id="pdf-meta-author" placeholder="Your name" autocomplete="off" spellcheck="false">
+      </label>
+      <label class="pdf-meta-check">
+        <input type="checkbox" id="pdf-meta-json" checked>
+        <span>Also save the editable project file as <code>&lt;name&gt;-raw.json</code></span>
+      </label>
+      <div class="pdf-meta-footer">
+        <button id="pdf-meta-cancel" type="button">Cancel</button>
+        <button id="pdf-meta-confirm" type="button" class="primary">Export PDF</button>
       </div>
     </div>
   </div>
@@ -1778,6 +2180,12 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script>
     'use strict';
+
+    // Pristine copy of this self-contained app, captured before any user interaction
+    // so the "Download app" button hands back a clean, offline-ready HTML file
+    // (no embedded screenshots or project state). Captured now because this script
+    // is the last element in <body>, so the DOM here equals the original markup.
+    const APP_SOURCE_HTML = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
 
     // ── Data model ────────────────────────────────────────────────────────────────
     // Each item: { id, type: 'image' | 'text' | 'file', ... }
@@ -1818,9 +2226,10 @@
     // ── State ─────────────────────────────────────────────────────────────────────
     let openItemId = null;
     let selectedIds = new Set();
+    let pasteTargetSectionId = null;   // section to receive pastes; null = end of board
 
     // ── Annotation state ──────────────────────────────────────────────────────────
-    const ANNOT_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6'];
+    const ANNOT_COLORS = ['#EF4444', '#FEF08A','#3B82F6'];
     let annotTool = 'pencil';   // 'pencil' | 'rect'
     let annotColor = ANNOT_COLORS[0];
     const ANNOT_PX = 4;
@@ -2073,8 +2482,22 @@
         if (e.target.id === 'preview-modal') closeExportPreview();
       });
       document.getElementById('preview-confirm').addEventListener('click', confirmExportPreview);
+      // Null-safe: the downloaded offline copy removes #btn-download-app, so it
+      // won't exist there — guard it so the rest of the listener setup still runs.
+      document.getElementById('btn-download-app')?.addEventListener('click', downloadApp);
+      document.getElementById('btn-help').addEventListener('click', openHelp);
+      document.getElementById('btn-help-empty')?.addEventListener('click', openHelp);
+      document.getElementById('help-close').addEventListener('click', closeHelp);
+      document.getElementById('help-done').addEventListener('click', closeHelp);
+      HELP_MODAL.addEventListener('click', (e) => { if (e.target.id === 'help-modal') closeHelp(); });
+      document.getElementById('pdf-meta-cancel').addEventListener('click', closePdfMeta);
+      document.getElementById('pdf-meta-confirm').addEventListener('click', confirmPdfMeta);
+      document.getElementById('pdf-meta-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'pdf-meta-modal') closePdfMeta();
+      });
       BTN_CLEAR.addEventListener('click', clearAll);
-      BTN_ADD_TEXT?.addEventListener('click', addTextCard);
+      BTN_ADD_TEXT?.addEventListener('click', () => addTextCard());
+      document.getElementById('btn-add-text-empty')?.addEventListener('click', () => addTextCard());
       BTN_ADD_SECTION?.addEventListener('click', () => addSection());
       BTN_TOGGLE_SECTIONS?.addEventListener('click', () => {
         // Collapse everything if any section is currently open; otherwise expand all.
@@ -2191,7 +2614,7 @@
       return map[ext] || 'application/octet-stream';
     }
 
-    async function addFileCard(file, defer = false) {
+    async function addFileCard(file, defer = false, afterId = null) {
       const dataURL = await readFile(file);
       const id = crypto.randomUUID();
       const entry = {
@@ -2202,9 +2625,8 @@
         size: file.size,
         dataURL,
       };
-      items.push(entry);
       const card = buildCard(entry);
-      CARDS.appendChild(card);
+      insertEntryAfter(entry, card, afterId);
       if (!defer) {
         reindex();
         syncInsertors();
@@ -2213,6 +2635,87 @@
         card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
       return card;
+    }
+
+    // ── Positional insert helper ──────────────────────────────────────────────────
+    // Insert a freshly-built entry + card into items[] and the DOM immediately after
+    // the card with id `afterId`. Mirrors addTextCard's afterId logic but tolerates
+    // the anchor being a section header (which has no trailing .card-insertor).
+    // afterId === null (or a stale id) falls back to appending at the very end.
+    function insertEntryAfter(entry, card, afterId) {
+      if (!afterId) { items.push(entry); CARDS.appendChild(card); return; }
+      const afterCard = CARDS.querySelector(`.card[data-id="${afterId}"]`);
+      if (!afterCard) { items.push(entry); CARDS.appendChild(card); return; }
+      const afterIdx = items.findIndex(it => it.id === afterId);
+      items.splice(afterIdx + 1, 0, entry);
+      const next = afterCard.nextSibling;
+      const refNode = (next && next.nodeType === 1 && next.classList.contains('card-insertor'))
+        ? next.nextSibling : next;   // step over a normal card's insertor; headers have none
+      CARDS.insertBefore(card, refNode);
+    }
+
+    // The id of the card that a paste should land after: the last card of the pinned
+    // section's region (or its header when the section is empty). null = append at end.
+    function pasteAnchorId() {
+      if (!pasteTargetSectionId) return null;
+      const header = CARDS.querySelector(`.card.section-card[data-id="${pasteTargetSectionId}"]`);
+      if (!header) return null;                          // stale (section deleted)
+      let lastId = header.dataset.id;                    // empty section → after the header
+      let n = header.nextElementSibling;
+      while (n && !n.classList.contains('section-card')) {
+        if (n.classList.contains('card')) lastId = n.dataset.id;
+        n = n.nextElementSibling;
+      }
+      return lastId;
+    }
+
+    // If the pinned target section is collapsed, expand it so freshly pasted cards
+    // aren't hidden. (applyCollapseStates() later re-syncs visibility.)
+    function expandPasteTargetIfCollapsed() {
+      if (!pasteTargetSectionId) return;
+      const entry = items.find(it => it.id === pasteTargetSectionId && it.type === 'section');
+      if (entry && entry.collapsed) {
+        entry.collapsed = false;
+        CARDS.querySelector(`.card.section-card[data-id="${pasteTargetSectionId}"]`)?.classList.remove('collapsed');
+      }
+    }
+
+    // Pin/unpin a section as the paste target (clicking the active pin clears it).
+    function setPasteTarget(id) {
+      pasteTargetSectionId = (pasteTargetSectionId === id) ? null : id;
+      refreshPasteTargetUI();
+    }
+
+    // Re-apply the pin's visual state across all section headers + the paste strip.
+    // Self-heals when the pinned section no longer exists. Called from
+    // applyCollapseStates() so it survives every reindex/reorder/delete.
+    function refreshPasteTargetUI() {
+      if (pasteTargetSectionId &&
+          !CARDS.querySelector(`.card.section-card[data-id="${pasteTargetSectionId}"]`)) {
+        pasteTargetSectionId = null;
+      }
+      CARDS.querySelectorAll('.card.section-card').forEach(c => {
+        const on = c.dataset.id === pasteTargetSectionId;
+        c.classList.toggle('paste-target', on);
+        const pin = c.querySelector('.section-pin');
+        if (pin) {
+          pin.classList.toggle('active', on);
+          pin.title = on ? 'Pasting into this section — click to clear'
+                         : 'Paste new screenshots into this section';
+        }
+      });
+      updatePasteStripTarget();
+    }
+
+    // Show "· Pasting into <title>" in the paste strip when a section is pinned.
+    function updatePasteStripTarget() {
+      const label = document.getElementById('paste-target-label');
+      if (!label) return;
+      if (!pasteTargetSectionId) { label.classList.add('hidden'); label.textContent = ''; return; }
+      const entry = items.find(it => it.id === pasteTargetSectionId && it.type === 'section');
+      const title = entry && entry.title && entry.title.trim() ? entry.title.trim() : 'Untitled section';
+      label.textContent = `· Pasting into “${title}”`;
+      label.classList.remove('hidden');
     }
 
     // ── Paste ─────────────────────────────────────────────────────────────────────
@@ -2245,6 +2748,8 @@
       if (files.length > 0) {
         event.preventDefault();
         handled = true;
+        expandPasteTargetIfCollapsed();
+        let anchorId = pasteAnchorId();
         let lastCard = null;
         for (const file of files) {
           const isImage = (file.type || '').startsWith('image/');
@@ -2254,12 +2759,13 @@
               const { width, height } = await imgDimensions(dataURL);
               const id = crypto.randomUUID();
               const entry = { id, type: 'image', dataURL, imageWidth: width, imageHeight: height, caption: '', annotations: [] };
-              items.push(entry);
               lastCard = buildCard(entry);
-              CARDS.appendChild(lastCard);
+              insertEntryAfter(entry, lastCard, anchorId);
+              anchorId = id;
             } else {
               // PDF, DOCX, MSG, etc. — becomes an attachment card.
-              lastCard = await addFileCard(file, true);
+              lastCard = await addFileCard(file, true, anchorId);
+              anchorId = lastCard?.dataset.id ?? anchorId;
             }
           } catch {
             const label = isImage ? 'screenshot' : `file "${file.name}"`;
@@ -2281,11 +2787,11 @@
           event.preventDefault();
           // Pasted text becomes an editable text card. (Only actual files —
           // PDF/Word/Excel/.msg/etc. — become attachments in the export bundle.)
+          expandPasteTargetIfCollapsed();
           const id = crypto.randomUUID();
           const entry = { id, type: 'text', text: trimmed };
-          items.push(entry);
           const card = buildCard(entry);
-          CARDS.appendChild(card);
+          insertEntryAfter(entry, card, pasteAnchorId());
           reindex();
           syncInsertors();
           updateUI();
@@ -2300,24 +2806,7 @@
       const id = crypto.randomUUID();
       const entry = { id, type: 'text', text: '' };
       const card = buildCard(entry);
-
-      if (afterId) {
-        const afterCard = CARDS.querySelector(`.card[data-id="${afterId}"]`);
-        if (afterCard) {
-          const afterIdx = items.findIndex(it => it.id === afterId);
-          items.splice(afterIdx + 1, 0, entry);
-          // Insert card after the insertor that follows afterCard
-          const insertor = afterCard.nextSibling;
-          const refNode = insertor ? insertor.nextSibling : null;
-          CARDS.insertBefore(card, refNode);
-        } else {
-          items.push(entry);
-          CARDS.appendChild(card);
-        }
-      } else {
-        items.push(entry);
-        CARDS.appendChild(card);
-      }
+      insertEntryAfter(entry, card, afterId);
 
       reindex();
       syncInsertors();
@@ -2331,23 +2820,7 @@
       const id = crypto.randomUUID();
       const entry = { id, type: 'section', title: '' };
       const card = buildCard(entry);
-
-      if (afterId) {
-        const afterCard = CARDS.querySelector(`.card[data-id="${afterId}"]`);
-        if (afterCard) {
-          const afterIdx = items.findIndex(it => it.id === afterId);
-          items.splice(afterIdx + 1, 0, entry);
-          const insertor = afterCard.nextSibling;
-          const refNode = insertor ? insertor.nextSibling : null;
-          CARDS.insertBefore(card, refNode);
-        } else {
-          items.push(entry);
-          CARDS.appendChild(card);
-        }
-      } else {
-        items.push(entry);
-        CARDS.appendChild(card);
-      }
+      insertEntryAfter(entry, card, afterId);
 
       reindex();
       syncInsertors();
@@ -2495,6 +2968,7 @@
       }
       flush();
       refreshSectionToggle();
+      refreshPasteTargetUI();
     }
 
     // Set every section's collapsed state at once (the navbar Collapse/Expand All
@@ -2576,7 +3050,6 @@
         const cap = document.createElement('div');
         cap.className = 'card-caption-line' + (htmlToText(entry.caption) ? '' : ' empty');
         if (htmlToText(entry.caption)) cap.innerHTML = entry.caption;
-        else cap.textContent = 'No description';
         card.append(seq, del, selChk, thumb, cap);
       } else if (entry.type === 'file') {
         const cls = fileTypeClass(entry.fileType || '', entry.name);
@@ -2620,6 +3093,15 @@
         const count = document.createElement('span');
         count.className = 'section-count';
 
+        const pin = document.createElement('button');
+        pin.type = 'button';
+        pin.className = 'section-pin';
+        pin.setAttribute('aria-label', 'Set as paste target');
+        pin.title = 'Paste new screenshots into this section';
+        pin.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.7-3.4a2 2 0 0 1-.3-1V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7.6a2 2 0 0 1-.3 1L5 17z"/></svg>`;
+        pin.addEventListener('click', (e) => { e.stopPropagation(); setPasteTarget(entry.id); });
+        if (entry.id === pasteTargetSectionId) { card.classList.add('paste-target'); pin.classList.add('active'); }
+
         const move = document.createElement('button');
         move.type = 'button';
         move.className = 'section-move';
@@ -2627,7 +3109,7 @@
         move.setAttribute('aria-label', 'Move section');
         move.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.7"/><circle cx="15" cy="5" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="19" r="1.7"/><circle cx="15" cy="19" r="1.7"/></svg>`;
 
-        card.append(seq, toggle, title, count, move, del);
+        card.append(seq, toggle, title, count, pin, move, del);
       } else {
         if (entry.text && entry.text.trim()) {
           thumb.innerHTML = entry.text;
@@ -2640,7 +3122,7 @@
 
       card.addEventListener('click', (e) => {
         if (performance.now() < suppressClickUntil) return; // click synthesised right after a drag
-        if (e.target.closest('.card-seq, .card-del, .section-title, .section-move')) return;
+        if (e.target.closest('.card-seq, .card-del, .section-title, .section-move, .section-pin')) return;
         if (entry.type === 'section') {
           // Click anywhere on the section bar (except its editable title) collapses/expands it.
           entry.collapsed = !entry.collapsed;
@@ -2802,6 +3284,41 @@
       });
     }
 
+    // Build the "highlight selection / remove highlight" toolbar shared by the image
+    // caption and text-card editors. `onApply` runs after each execCommand so the
+    // caller can sync its entry property (caption/text) from the editor and push a
+    // debounced history entry. mousedown + preventDefault keeps the editor's text
+    // selection intact while the button is pressed.
+    function buildHighlightToolbar(onApply) {
+      const bar = document.createElement('div');
+      bar.className = 'highlight-toolbar';
+
+      const hlBtn = document.createElement('button');
+      hlBtn.type = 'button';
+      hlBtn.className = 'highlight-btn';
+      hlBtn.title = 'Highlight selection (yellow)';
+      hlBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
+      hlBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        document.execCommand('hiliteColor', false, '#FEF08A');
+        onApply();
+      });
+
+      const clearBtn = document.createElement('button');
+      clearBtn.type = 'button';
+      clearBtn.className = 'highlight-btn hl-clear';
+      clearBtn.title = 'Remove highlight';
+      clearBtn.textContent = '✕';
+      clearBtn.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        document.execCommand('hiliteColor', false, 'transparent');
+        onApply();
+      });
+
+      bar.append(hlBtn, clearBtn);
+      return bar;
+    }
+
     // ── Modal ─────────────────────────────────────────────────────────────────────
     function openModal(id, autoFocus = true) {
       const entry = items.find((s) => s.id === id);
@@ -2844,10 +3361,10 @@
           b.setAttribute('aria-label', `Color ${color}`);
           return b;
         };
-        const pencilBtn = mkTool('pencil', '✏ Pencil');
+        const pencilBtn = mkTool('pen', '✏ Pen');
         const highlightBtn = mkTool('highlight', '🖍 Highlighter');
-        const rectBtn = mkTool('rect', '▭ Rectangle');
-        const textBtn = mkTool('text', 'T Text');
+        const rectBtn = mkTool('rect', '▭ Box');
+        const textBtn = mkTool('text', 'Text');
         const eraserBtn = mkTool('eraser', '⌫ Eraser');
         const sep1 = document.createElement('span'); sep1.className = 'annot-sep';
         const colorBtns = ANNOT_COLORS.map(mkColor);
@@ -3284,33 +3801,11 @@
         label.textContent = 'Description';
 
         // ── Highlight toolbar ──
-        const hlBarImg = document.createElement('div');
-        hlBarImg.className = 'highlight-toolbar';
-        const hlBtnImg = document.createElement('button');
-        hlBtnImg.type = 'button';
-        hlBtnImg.className = 'highlight-btn';
-        hlBtnImg.title = 'Highlight selection (yellow)';
-        hlBtnImg.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
-        hlBtnImg.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          document.execCommand('hiliteColor', false, '#FEF08A');
+        const hlBarImg = buildHighlightToolbar(() => {
           entry.caption = capEditor.innerHTML;
           refreshCard(entry);
           pushHistoryDebounced();
         });
-        const clearBtnImg = document.createElement('button');
-        clearBtnImg.type = 'button';
-        clearBtnImg.className = 'highlight-btn hl-clear';
-        clearBtnImg.title = 'Remove highlight';
-        clearBtnImg.textContent = '✕';
-        clearBtnImg.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          document.execCommand('hiliteColor', false, 'transparent');
-          entry.caption = capEditor.innerHTML;
-          refreshCard(entry);
-          pushHistoryDebounced();
-        });
-        hlBarImg.append(hlBtnImg, clearBtnImg);
 
         const capEditor = document.createElement('div');
         capEditor.className = 'desc-rich';
@@ -3337,36 +3832,11 @@
         label.textContent = 'Text content';
 
         // ── Highlight toolbar ──
-        const hlBar = document.createElement('div');
-        hlBar.className = 'highlight-toolbar';
-
-        const hlBtn = document.createElement('button');
-        hlBtn.type = 'button';
-        hlBtn.className = 'highlight-btn';
-        hlBtn.title = 'Highlight selection (yellow)';
-        hlBtn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>`;
-        hlBtn.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          document.execCommand('hiliteColor', false, '#FEF08A');
+        const hlBar = buildHighlightToolbar(() => {
           entry.text = editor.innerHTML;
           refreshCard(entry);
           pushHistoryDebounced();
         });
-
-        const clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.className = 'highlight-btn hl-clear';
-        clearBtn.title = 'Remove highlight';
-        clearBtn.textContent = '✕';
-        clearBtn.addEventListener('mousedown', (e) => {
-          e.preventDefault();
-          document.execCommand('hiliteColor', false, 'transparent');
-          entry.text = editor.innerHTML;
-          refreshCard(entry);
-          pushHistoryDebounced();
-        });
-
-        hlBar.append(hlBtn, clearBtn);
 
         // ── Rich text editor ──
         const editor = document.createElement('div');
@@ -3433,16 +3903,24 @@
     function navigateModal(delta) {
       if (!openItemId) return;
       const i = items.findIndex((s) => s.id === openItemId);
-      const next = i + delta;
-      if (i === -1 || next < 0 || next >= items.length) return;
+      if (i === -1) return;
+      // Skip over section dividers so navigation crosses from one section into the
+      // next (the modal only opens image/text/file cards, never section headers).
+      let next = i + delta;
+      while (next >= 0 && next < items.length && items[next].type === 'section') next += delta;
+      if (next < 0 || next >= items.length) return;
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       openModal(items[next].id, false);
     }
 
     function updateNavButtons() {
       const i = items.findIndex((s) => s.id === openItemId);
-      MODAL_PREV.disabled = i <= 0;
-      MODAL_NEXT.disabled = i === -1 || i >= items.length - 1;
+      // Enabled when any non-section card exists before / after the current one,
+      // regardless of section boundaries in between.
+      const hasBefore = i > 0 && items.slice(0, i).some((it) => it.type !== 'section');
+      const hasAfter = i !== -1 && items.slice(i + 1).some((it) => it.type !== 'section');
+      MODAL_PREV.disabled = i === -1 || !hasBefore;
+      MODAL_NEXT.disabled = i === -1 || !hasAfter;
     }
 
     function attachResizer(resizer, left, right) {
@@ -3528,28 +4006,35 @@
 
     function clearAll() {
       clearSelection();
+      pasteTargetSectionId = null;
       items.length = 0;
       CARDS.innerHTML = '';
       updateUI();
+      updatePasteStripTarget();
       pushHistory();
     }
 
     // ── Project Save / Open ───────────────────────────────────────────────────────
-    function saveProject() {
-      if (!items.length) return;
-      const name = askFilename('Save project as:', `collage-project-${Date.now()}`, 'json');
-      if (!name) return;
+    // The serializable project payload (shared by Save and the PDF's embedded JSON).
+    // Strips the transient composite-cache fields from each item.
+    function buildProjectPayload() {
       const cleanItems = items.map((it) => {
         const { _cKey, _cUrl, ...rest } = it;
         return rest;
       });
-      const payload = {
-        format: 'screenshot-collage',
+      return {
+        format: 'pasteboard',
         version: 1,
         savedAt: new Date().toISOString(),
         items: cleanItems,
       };
-      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+    }
+
+    function saveProject() {
+      if (!items.length) return;
+      const name = askFilename('Save project as:', `pasteboard-project-${Date.now()}`, 'json');
+      if (!name) return;
+      const blob = new Blob([JSON.stringify(buildProjectPayload())], { type: 'application/json' });
       download(blob, name);
       toast('Project saved.');
     }
@@ -3563,7 +4048,9 @@
       reader.onload = () => {
         try {
           const data = JSON.parse(reader.result);
-          if (data?.format !== 'screenshot-collage' || !Array.isArray(data.items)) {
+          // Accept the current 'pasteboard' format and the legacy 'screenshot-collage'
+          // name so projects saved before the rename still open.
+          if ((data?.format !== 'pasteboard' && data?.format !== 'screenshot-collage') || !Array.isArray(data.items)) {
             throw new Error('Not a valid project file');
           }
           if (items.length &&
@@ -3583,6 +4070,7 @@
 
     function loadProject(saved) {
       clearSelection();
+      pasteTargetSectionId = null;
       items.length = 0;
       CARDS.innerHTML = '';
       for (const raw of saved) {
@@ -3633,8 +4121,8 @@
     // section collapse/expand so the modal reflects the current items[].
     async function renderPreviewBody() {
       PREVIEW_SUB.textContent = _previewKind === 'pdf'
-        ? `Review your collage before exporting to PDF (${items.length} item${items.length === 1 ? '' : 's'}).`
-        : `Review your collage before exporting to Word (${items.length} item${items.length === 1 ? '' : 's'}).`;
+        ? `Review your pasteboard before exporting to PDF (${items.length} item${items.length === 1 ? '' : 's'}).`
+        : `Review your pasteboard before exporting to Word (${items.length} item${items.length === 1 ? '' : 's'}).`;
       PREVIEW_BODY.innerHTML = '<div class="preview-loading">Building preview…</div>';
 
       const frag = document.createDocumentFragment();
@@ -3775,8 +4263,44 @@
     function confirmExportPreview() {
       const kind = _previewKind;
       closeExportPreview();
-      if (kind === 'pdf') exportAsPDF();
+      if (kind === 'pdf') openPdfMeta();
       else if (kind === 'docx') exportAsDOCX();
+    }
+
+    // ── PDF details modal (filename / author / include-JSON) ──────────────────────
+    const PDF_META_MODAL = document.getElementById('pdf-meta-modal');
+    const PDF_META_NAME = document.getElementById('pdf-meta-name');
+    const PDF_META_AUTHOR = document.getElementById('pdf-meta-author');
+    const PDF_META_JSON = document.getElementById('pdf-meta-json');
+    let _lastAuthor = '';
+
+    function openPdfMeta() {
+      PDF_META_NAME.value = 'pasteboard';
+      PDF_META_AUTHOR.value = _lastAuthor;
+      PDF_META_JSON.checked = true;
+      PDF_META_MODAL.classList.remove('hidden');
+      document.addEventListener('keydown', _pdfMetaKeyHandler);
+      setTimeout(() => { PDF_META_NAME.focus(); PDF_META_NAME.select(); }, 30);
+    }
+
+    function closePdfMeta() {
+      PDF_META_MODAL.classList.add('hidden');
+      document.removeEventListener('keydown', _pdfMetaKeyHandler);
+    }
+
+    function _pdfMetaKeyHandler(e) {
+      if (e.key === 'Escape') { e.preventDefault(); closePdfMeta(); }
+      else if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') { e.preventDefault(); confirmPdfMeta(); }
+    }
+
+    function confirmPdfMeta() {
+      let base = (PDF_META_NAME.value || '').trim().replace(/\.pdf$/i, '');
+      if (!base) base = 'pasteboard';
+      const author = (PDF_META_AUTHOR.value || '').trim();
+      _lastAuthor = author;
+      const includeJson = PDF_META_JSON.checked;
+      closePdfMeta();
+      exportAsPDF({ baseName: base, author, includeJson });
     }
 
     function _previewKeyHandler(e) {
@@ -3795,13 +4319,14 @@
     // inserted, the download becomes a .zip containing the document plus an attachments/
     // folder (works in any browser / managed Office — no embedded-attachment support needed).
     // Otherwise the plain document is downloaded as before.
-    async function exportBundle(docName, docBlob) {
+    async function exportBundle(docName, docBlob, extras = []) {
       const fileItems = items.filter((e) => e.type === 'file' && e.dataURL);
-      if (!fileItems.length) { download(docBlob, docName); return; }
+      if (!fileItems.length && !extras.length) { download(docBlob, docName); return; }
       if (typeof JSZip === 'undefined') { download(docBlob, docName); toast('Files could not be bundled (JSZip not loaded) — document saved without attachments.'); return; }
 
       const bundle = new JSZip();
       bundle.file(docName, docBlob);
+      for (const ex of extras) bundle.file(ex.name, ex.data);
       const used = new Set();
       for (const fe of fileItems) {
         let base = (fe.name || 'attachment').replace(/[\\/:*?"<>|]+/g, '_');
@@ -3817,18 +4342,23 @@
       const blob = await bundle.generateAsync({ type: 'blob' });
       const zipName = docName.replace(/\.[^.]+$/, '') + '.zip';
       download(blob, zipName);
-      toast(`Saved ${zipName} — document + ${fileItems.length} file${fileItems.length > 1 ? 's' : ''} in the attachments folder.`);
+      const parts = [];
+      if (fileItems.length) parts.push(`${fileItems.length} file${fileItems.length > 1 ? 's' : ''} in the attachments folder`);
+      if (extras.length) parts.push(extras.map((e) => e.name).join(', '));
+      toast(`Saved ${zipName} — document + ${parts.join(' + ')}.`);
     }
 
     // ── PDF Export (jsPDF) ────────────────────────────────────────────────────────
-    async function exportAsPDF() {
+    async function exportAsPDF(opts = {}) {
       if (!items.length) return;
       if (typeof window.jspdf === 'undefined') {
         toast('jsPDF library not loaded — check your internet connection.');
         return;
       }
-      const name = askFilename('Save PDF as:', `collage-${Date.now()}`, 'pdf');
-      if (!name) return;
+      const base = (opts.baseName || `pasteboard-${Date.now()}`).replace(/[\\/:*?"<>|]+/g, '_');
+      const name = base + '.pdf';
+      const author = (opts.author || '').trim();
+      const includeJson = !!opts.includeJson;
 
       showOverlay('Generating PDF…');
       try {
@@ -3839,6 +4369,46 @@
         const pageH = doc.internal.pageSize.getHeight();
         const margin = 40;
         const contentW = pageW - margin * 2;
+
+        const createdAt = new Date();
+        doc.setProperties({ title: base, author, creator: 'Pasteboard' });
+
+        // ── Cover page ──
+        doc.setFillColor(79, 70, 229);
+        doc.rect(0, 0, pageW, 8, 'F');                 // top accent band
+        let cy = pageH * 0.30;
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(79, 70, 229);
+        doc.text('PASTEBOARD', margin, cy);
+        cy += 32;
+        doc.setFontSize(30);
+        doc.setTextColor(17, 24, 39);
+        const coverTitleLines = doc.splitTextToSize(base, contentW);
+        doc.text(coverTitleLines, margin, cy);
+        cy += coverTitleLines.length * 34 + 14;
+        doc.setDrawColor(229, 231, 235);
+        doc.setLineWidth(1);
+        doc.line(margin, cy, margin + contentW, cy);
+        cy += 28;
+        const metaLine = (lbl, val) => {
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(107, 114, 128);
+          doc.text(lbl, margin, cy);
+          doc.setFont('helvetica', 'normal'); doc.setTextColor(31, 41, 55);
+          doc.text(val, margin + 90, cy);
+          cy += 24;
+        };
+        metaLine('Author', author || '—');
+        metaLine('Created', createdAt.toLocaleString());
+        metaLine('Items', String(items.filter((it) => it.type !== 'section').length));
+        if (includeJson) {
+          cy += 12;
+          doc.setFont('helvetica', 'italic'); doc.setFontSize(10); doc.setTextColor(107, 114, 128);
+          const note = doc.splitTextToSize('An editable project file (' + base + '-raw.json) is saved alongside this PDF — open it in Pasteboard to keep editing.', contentW);
+          doc.text(note, margin, cy);
+        }
+        doc.addPage();
+
         let y = margin;
 
         const ensureSpace = (h) => {
@@ -3897,18 +4467,17 @@
             doc.addImage(pngURL, 'PNG', margin + (contentW - w) / 2, y, w, h, undefined, 'FAST');
             y += h + 10;
 
-            const isEmpty = !htmlToText(entry.caption);
             const cap = htmlToText(entry.caption);
-            doc.setFont('helvetica', isEmpty ? 'italic' : 'normal');
-            doc.setFontSize(10.5);
-            if (isEmpty) doc.setTextColor(156, 163, 175);
-            else doc.setTextColor(55, 65, 81);
+            if (cap) {
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(10.5);
 
-            const lines = doc.splitTextToSize(cap, contentW);
-            const blockH = lines.length * 13;
-            ensureSpace(blockH + 18);
-            doc.text(lines, margin, y + 11);
-            y += blockH + 18;
+              const nLines = pdfRichText(doc, cap, margin, 0, contentW, 13, [55, 65, 81], 11, true);
+              const blockH = nLines * 13;
+              ensureSpace(blockH + 18);
+              pdfRichText(doc, cap, margin, y, contentW, 13, [55, 65, 81], 11, false);
+              y += blockH + 18;
+            }
           } else if (entry.type === 'file') {
             const ftLabel = fileTypeLabel(entry.fileType || '', entry.name || '');
             const fname = entry.name || 'Attachment';
@@ -3949,22 +4518,37 @@
             y += 20;
           } else {
             const isEmpty = !htmlToText(entry.text);
-            const txt = htmlToText(entry.text) || '(empty text card)';
-            doc.setFont('helvetica', isEmpty ? 'italic' : 'normal');
-            doc.setFontSize(11);
-            if (isEmpty) doc.setTextColor(156, 163, 175);
-            else doc.setTextColor(17, 24, 39);
+            if (isEmpty) {
+              doc.setFont('helvetica', 'italic');
+              doc.setFontSize(11);
+              doc.setTextColor(156, 163, 175);
+              const lines = doc.splitTextToSize('(empty text card)', contentW);
+              const blockH = lines.length * 14;
+              ensureSpace(blockH + 18);
+              doc.text(lines, margin, y + 12);
+              y += blockH + 18;
+            } else {
+              const txt = htmlToText(entry.text);
+              doc.setFont('helvetica', 'normal');
+              doc.setFontSize(11);
 
-            const lines = doc.splitTextToSize(txt, contentW);
-            const blockH = lines.length * 14;
-            ensureSpace(blockH + 18);
-            doc.text(lines, margin, y + 12);
-            y += blockH + 18;
+              const nLines = pdfRichText(doc, txt, margin, 0, contentW, 14, [17, 24, 39], 12, true);
+              const blockH = nLines * 14;
+              ensureSpace(blockH + 18);
+              pdfRichText(doc, txt, margin, y, contentW, 14, [17, 24, 39], 12, false);
+              y += blockH + 18;
+            }
           }
         }
 
         // Inserted files travel alongside the PDF in a .zip bundle (see exportBundle).
         await exportBundle(name, doc.output('blob'));
+        // Also save the editable project as a separate JSON named "<file>-raw.json",
+        // so the same export can be re-opened and edited later.
+        if (includeJson) {
+          const jsonBlob = new Blob([JSON.stringify(buildProjectPayload())], { type: 'application/json' });
+          download(jsonBlob, base + '-raw.json');
+        }
       } catch (err) {
         toast('PDF export failed: ' + err.message);
         console.error(err);
@@ -3997,7 +4581,7 @@
         toast('JSZip library not loaded — check your internet connection.');
         return;
       }
-      const name = askFilename('Save Word document as:', `collage-${Date.now()}`, 'docx');
+      const name = askFilename('Save Word document as:', `pasteboard-${Date.now()}`, 'docx');
       if (!name) return;
 
       showOverlay('Generating Word document…');
@@ -4014,16 +4598,20 @@
           const pngURL = (entry.annotations || []).length
             ? await composeImage(entry)
             : toPngDataURL(imgEl);
-          zip.file(`word/media/${filename}`, urlToBytes(pngURL), { binary: true });
+          zip.file(`word/media/${filename}`, dataURLtoBytes(pngURL), { binary: true });
         }
 
         // Inserted files are NOT embedded as OLE objects (Edge/Chrome + managed Office
         // can't open those). They travel alongside the .docx in a .zip bundle instead;
         // the document body still shows each file as a labelled badge reference.
+        // Build the document body first so it can register external hyperlink
+        // relationships, then emit the rels part that references them.
+        const hyperlinks = [];
+        const docXml = xmlDocument(rels, hyperlinks);
         zip.file('[Content_Types].xml', xmlContentTypes());
         zip.file('_rels/.rels', xmlRootRels());
-        zip.file('word/_rels/document.xml.rels', xmlDocRels(rels));
-        zip.file('word/document.xml', xmlDocument(rels));
+        zip.file('word/_rels/document.xml.rels', xmlDocRels(rels, hyperlinks));
+        zip.file('word/document.xml', docXml);
 
         const blob = await zip.generateAsync({
           type: 'blob',
@@ -4058,19 +4646,42 @@
 </Relationships>`;
     }
 
-    function xmlDocRels(rels) {
-      const xml = rels.map(({ rId, filename }) =>
+    function xmlDocRels(rels, hyperlinks) {
+      const imgXml = rels.map(({ rId, filename }) =>
         `  <Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/${filename}"/>`
+      ).join('\n');
+      const linkXml = (hyperlinks || []).map(({ rId, target }) =>
+        `  <Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${xmlEsc(target)}" TargetMode="External"/>`
       ).join('\n');
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-${xml}
+${[imgXml, linkXml].filter(Boolean).join('\n')}
 </Relationships>`;
     }
 
-    function xmlDocument(rels) {
+    function xmlDocument(rels, hyperlinks) {
       const relByEntryId = new Map(rels.map((r) => [r.entry.id, r]));
       let pid = 0;
+      hyperlinks = hyperlinks || [];
+
+      // Convert a plain-text string into a sequence of sibling <w:r> / <w:hyperlink>
+      // runs for inclusion directly inside a <w:p>. URL pieces become external
+      // hyperlinks styled blue + underlined; each registers a relationship.
+      const docxRuns = (text, sz, color, italic) => {
+        const baseRPr = `<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/><w:color w:val="${color}"/>${italic ? '<w:i/><w:iCs/>' : ''}`;
+        const linkRPr = `<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/><w:color w:val="0563C1"/><w:u w:val="single"/>`;
+        return urlPieces(text).map((p) => {
+          if (p.url) {
+            const rId = `rIdL${hyperlinks.length + 1}`;
+            hyperlinks.push({ rId, target: p.url });
+            return `<w:hyperlink r:id="${rId}"><w:r><w:rPr>${linkRPr}</w:rPr><w:t xml:space="preserve">${xmlEsc(p.str)}</w:t></w:r></w:hyperlink>`;
+          }
+          const inner = p.str.split('\n')
+            .map((line, idx) => `${idx > 0 ? '<w:br/>' : ''}<w:t xml:space="preserve">${xmlEsc(line)}</w:t>`)
+            .join('');
+          return `<w:r><w:rPr>${baseRPr}</w:rPr>${inner}</w:r>`;
+        }).join('');
+      };
 
       let docxStepNum = 0;
       const body = items.map((entry, i) => {
@@ -4114,10 +4725,12 @@ ${xml}
           pid++;
           const r = relByEntryId.get(entry.id);
           const { cx, cy } = toEMU(entry.imageWidth, entry.imageHeight);
-          const capText = htmlToText(entry.caption) || '(no description)';
-          const isGray = !htmlToText(entry.caption);
-          const color = isGray ? '9CA3AF' : '374151';
-          const italic = isGray ? '<w:i/><w:iCs/>' : '';
+          const capText = htmlToText(entry.caption);
+          const capPara = capText ? `
+  <w:p>
+    <w:pPr><w:spacing w:before="100" w:after="360"/></w:pPr>
+    ${docxRuns(capText, 22, '374151', false)}
+  </w:p>` : '';
 
           return `${seqPara}
   <w:p>
@@ -4152,14 +4765,7 @@ ${xml}
         </wp:inline>
       </w:drawing>
     </w:r>
-  </w:p>
-  <w:p>
-    <w:pPr><w:spacing w:before="100" w:after="360"/></w:pPr>
-    <w:r>
-      <w:rPr><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="${color}"/>${italic}</w:rPr>
-      <w:t xml:space="preserve">${xmlEsc(capText)}</w:t>
-    </w:r>
-  </w:p>`;
+  </w:p>${capPara}`;
         }
 
         // File card — labelled badge that references the file in the attachments/ folder.
@@ -4185,22 +4791,14 @@ ${xml}
         }
 
         // Text card
-        const txt = htmlToText(entry.text) || '(empty text card)';
         const isGray = !htmlToText(entry.text);
-        const color = isGray ? '9CA3AF' : '111827';
-        const italic = isGray ? '<w:i/><w:iCs/>' : '';
-        const runs = txt.split('\n').map((line, idx) => {
-          const br = idx > 0 ? '<w:br/>' : '';
-          return `${br}<w:t xml:space="preserve">${xmlEsc(line)}</w:t>`;
-        }).join('');
+        const txt = htmlToText(entry.text) || '(empty text card)';
+        const runs = docxRuns(txt, 24, isGray ? '9CA3AF' : '111827', isGray);
 
         return `${seqPara}
   <w:p>
     <w:pPr><w:spacing w:before="40" w:after="240"/></w:pPr>
-    <w:r>
-      <w:rPr><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="${color}"/>${italic}</w:rPr>
-      ${runs}
-    </w:r>
+    ${runs}
   </w:p>`;
       }).join('\n');
 
@@ -4241,7 +4839,97 @@ ${body}
       return (d.innerText || d.textContent || '').trim();
     }
 
+    // Split plain text into a flat list of { str, url } pieces. `url` is null for
+    // ordinary text and an absolute href for any http(s):// or www. link found.
+    // Trailing sentence punctuation is split off so it isn't swallowed into the link.
+    function urlPieces(text) {
+      const re = /(https?:\/\/[^\s]+|www\.[^\s]+)/gi;
+      const out = [];
+      let last = 0, m;
+      while ((m = re.exec(text))) {
+        if (m.index > last) out.push({ str: text.slice(last, m.index), url: null });
+        let raw = m[0];
+        const tm = raw.match(/[)\].,;:!?'"]+$/);   // strip trailing punctuation
+        let tail = '';
+        if (tm) { tail = tm[0]; raw = raw.slice(0, raw.length - tail.length); }
+        if (raw) {
+          const href = /^www\./i.test(raw) ? 'http://' + raw : raw;
+          out.push({ str: raw, url: href });
+        }
+        if (tail) out.push({ str: tail, url: null });
+        last = re.lastIndex;
+      }
+      if (last < text.length) out.push({ str: text.slice(last), url: null });
+      return out;
+    }
+
+    // Draw text that may contain URLs into a jsPDF doc, wrapping to maxW. URL runs
+    // render blue + underlined and are made clickable; plain runs use `rgb`. Returns
+    // the number of lines used. With measureOnly = true it lays out without drawing
+    // (so callers can ensureSpace() before the real draw). The caller sets the font.
+    function pdfRichText(doc, text, x, yTop, maxW, lineH, rgb, baselineOffset, measureOnly) {
+      const LINK = [37, 99, 235];   // #2563EB
+      // Flatten into words, each tagged with its url (or null) and whether it's a space.
+      const words = [];
+      for (const p of urlPieces(text)) {
+        for (const seg of p.str.split(/(\n)/)) {
+          if (seg === '') continue;
+          if (seg === '\n') { words.push({ nl: true }); continue; }
+          for (const part of seg.split(/(\s+)/)) {
+            if (part === '') continue;
+            words.push({ text: part, url: p.url, space: /^\s+$/.test(part) });
+          }
+        }
+      }
+      let lineWords = [], lineW = 0, lineCount = 0;
+      const flush = () => {
+        if (!measureOnly) {
+          let cx = x;
+          const by = yTop + baselineOffset + lineCount * lineH;
+          for (const w of lineWords) {
+            const ww = doc.getTextWidth(w.text);
+            if (w.url) {
+              doc.setTextColor(LINK[0], LINK[1], LINK[2]);
+              doc.textWithLink(w.text, cx, by, { url: w.url });
+              doc.setDrawColor(LINK[0], LINK[1], LINK[2]);
+              doc.setLineWidth(0.5);
+              doc.line(cx, by + 1.5, cx + ww, by + 1.5);
+            } else {
+              doc.setTextColor(rgb[0], rgb[1], rgb[2]);
+              doc.text(w.text, cx, by);
+            }
+            cx += ww;
+          }
+        }
+        lineCount++; lineWords = []; lineW = 0;
+      };
+      for (const w of words) {
+        if (w.nl) { flush(); continue; }
+        const ww = doc.getTextWidth(w.text);
+        if (lineWords.length === 0 && w.space) continue;          // drop leading space
+        if (lineW + ww > maxW && lineWords.length > 0) {
+          flush();
+          if (w.space) continue;
+        }
+        if (ww > maxW && !w.space) {                              // break an over-long word/URL
+          let chunk = '';
+          for (const ch of w.text) {
+            if (chunk && doc.getTextWidth(chunk + ch) > maxW) {
+              lineWords.push({ text: chunk, url: w.url }); flush(); chunk = ch;
+            } else chunk += ch;
+          }
+          if (chunk) { lineWords.push({ text: chunk, url: w.url }); lineW += doc.getTextWidth(chunk); }
+          continue;
+        }
+        lineWords.push(w); lineW += ww;
+      }
+      if (lineWords.length) flush();
+      return lineCount || 1;
+    }
+
     // ── Utilities ─────────────────────────────────────────────────────────────────
+    // Decode the base64 payload of a data URL into raw bytes. Shared by the PDF/DOCX
+    // bundlers (attachments and embedded PNGs both go through here).
     function dataURLtoBytes(dataURL) {
       const base64 = (dataURL || '').split(',')[1] || '';
       const binary = atob(base64);
@@ -4267,14 +4955,6 @@ ${body}
       });
     }
 
-    function urlToBytes(dataURL) {
-      const b64 = dataURL.split(',')[1];
-      const binary = atob(b64);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      return bytes;
-    }
-
     function askFilename(message, defaultBase, ext) {
       const raw = window.prompt(message, defaultBase);
       if (raw === null) return null;
@@ -4284,6 +4964,32 @@ ${body}
       const dot = '.' + ext.toLowerCase();
       if (!name.toLowerCase().endsWith(dot)) name += dot;
       return name;
+    }
+
+    // ── How-to guide ──────────────────────────────────────────────────────────────
+    const HELP_MODAL = document.getElementById('help-modal');
+    function openHelp() {
+      HELP_MODAL.classList.remove('hidden');
+      document.addEventListener('keydown', _helpKeyHandler);
+    }
+    function closeHelp() {
+      HELP_MODAL.classList.add('hidden');
+      document.removeEventListener('keydown', _helpKeyHandler);
+    }
+    function _helpKeyHandler(e) {
+      if (e.key === 'Escape') { e.preventDefault(); closeHelp(); }
+    }
+
+    // Hand back a clean, standalone copy of this app for offline use. The downloaded
+    // copy omits the "Download app" button itself (you don't re-download an app you
+    // already have locally).
+    function downloadApp() {
+      const docp = new DOMParser().parseFromString(APP_SOURCE_HTML, 'text/html');
+      docp.getElementById('btn-download-app')?.remove();
+      const html = '<!DOCTYPE html>\n' + docp.documentElement.outerHTML;
+      const blob = new Blob([html], { type: 'text/html' });
+      download(blob, 'pasteboard.html');
+      toast('App downloaded — open the file in any browser to use it offline.');
     }
 
     function download(blob, name) {
