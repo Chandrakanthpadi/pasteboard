@@ -148,13 +148,30 @@
       transform: translateY(0) !important;
     }
 
-    #btn-export-png {
+    /* Toolbar buttons are compact, equal-size icon squares (labels are conveyed via
+       native title/aria-label tooltips). */
+    #toolbar-right button {
+      padding: 0;
+      width: 38px;
+      height: 38px;
+      justify-content: center;
+      gap: 0;
+    }
+    #toolbar-right button svg { width: 17px; height: 17px; }
+    /* Buttons that keep a text label size to their content instead of a square. */
+    #toolbar-right button.has-label {
+      width: auto;
+      padding: 0 14px;
+      gap: 6px;
+    }
+
+    /* Export PDF is the primary action — keep it accent-filled among the outlined icons. */
+    #btn-export-pdf {
       background: var(--accent);
       color: #fff;
       box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
     }
-
-    #btn-export-png:not(:disabled):hover {
+    #btn-export-pdf:not(:disabled):hover {
       background: var(--accent-dark);
       transform: translateY(-1px);
       box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4);
@@ -301,16 +318,39 @@
       line-height: 1.7;
     }
 
-    /* ── Cards Container — horizontal flex-wrap grid ───────────── */
+    /* ── Cards Container — vertical stack of boxes + loose row ───── */
     #cards-container {
       max-width: 1240px;
       width: calc(100% - 48px);
       margin: 24px auto 60px;
       display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    /* A horizontal wrap-grid of cards. Appears at top level (loose cards), directly
+       under a section, or inside a step body — same grid rules everywhere. */
+    .card-row {
+      display: flex;
       flex-direction: row;
       flex-wrap: wrap;
       align-items: stretch;
       gap: 4px;
+    }
+    /* Empty rows stay visible as a drop affordance. */
+    .card-row.empty-hint {
+      min-height: 56px;
+      border: 1.5px dashed var(--border);
+      border-radius: 8px;
+      align-items: center;
+      justify-content: center;
+    }
+    .card-row.empty-hint::before {
+      content: 'Drop cards here, or use + Card';
+      color: var(--text-3);
+      font-size: 12px;
+      font-style: italic;
     }
 
     /* ── Card (small horizontal tile) ──────────────────────────── */
@@ -358,8 +398,6 @@
     /* Drop indicator lines shown while dragging */
     .card.drop-before { box-shadow: -3px 0 0 0 #4F46E5, var(--shadow-md); }
     .card.drop-after  { box-shadow:  3px 0 0 0 #4F46E5, var(--shadow-md); }
-    .card.section-card.drop-before { box-shadow: 0 -3px 0 0 #4F46E5; }
-    .card.section-card.drop-after  { box-shadow: 0  3px 0 0 #4F46E5; }
 
     /* Subtle slide transition so tiles ease into place when neighbour is reordered */
     .card:not(.dragging) {
@@ -652,156 +690,153 @@
     #selection-bar button:hover { background: rgba(255,255,255,0.25); }
     #sel-group-btn { background: #4F46E5 !important; border-color: #6366F1 !important; }
     #sel-group-btn:hover { background: #4338CA !important; }
+    #sel-group-step-btn { background: #7C3AED !important; border-color: #8B5CF6 !important; }
+    #sel-group-step-btn:hover { background: #6D28D9 !important; }
     #sel-del-btn { background: #DC2626 !important; border-color: #EF4444 !important; }
     #sel-del-btn:hover { background: #B91C1C !important; }
 
-    /* ── Section card ────────────────────────────────────────── */
-    .card.section-card {
-      width: 100%;
-      flex-basis: 100%;
-      height: auto;
-      min-height: 48px;
-      background: linear-gradient(90deg, #EEF2FF 0%, #F5F3FF 100%);
-      border-color: #C7D2FE;
+    /* ── Section / Step boxes (nested) ──────────────────────────── */
+    /* A section is an outlined container holding optional loose cards and step
+       boxes; a step is a lighter inner container holding a card row. */
+    .section-box {
+      border: 1px solid #C7D2FE;
       border-left: 4px solid #4F46E5;
-      padding: 0 14px 0 36px;
+      border-radius: 10px;
+      background: linear-gradient(180deg, #FBFBFF 0%, #F7F7FF 100%);
+      padding: 8px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .step-box {
+      border: 1px solid #DDD6FE;
+      border-radius: 8px;
+      background: #FCFCFF;
+      padding: 6px 10px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .section-box.paste-target,
+    .step-box.paste-target {
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.35);
+      border-color: #4F46E5;
+    }
+
+    /* Shared header bar for both section and step boxes */
+    .box-head {
       display: flex;
       align-items: center;
+      gap: 8px;
+      min-height: 32px;
       cursor: pointer;
+      user-select: none;
+    }
+    .head-num {
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      font-size: 13px;
+      color: #4338CA;
+      background: #E0E7FF;
       border-radius: 6px;
-      box-shadow: none;
-      flex-direction: row;
+      padding: 2px 8px;
     }
-
-    .card.section-card .card-seq {
-      display: none;
+    .step-head .head-num {
+      font-size: 12px;
+      color: #6D28D9;
+      background: #EDE9FE;
     }
-
-    .card.section-card:hover {
-      border-color: #A5B4FC;
-      border-left-color: #4338CA;
-    }
-
-    /* Collapse indicator (chevron) sits in the section's left gutter.
-       It's non-interactive — clicks pass through to the section card. */
-    .section-toggle {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 20px;
-      height: 20px;
+    .head-chevron {
+      flex-shrink: 0;
       display: flex;
       align-items: center;
-      justify-content: center;
       color: #4338CA;
-      pointer-events: none;
-    }
-    .section-toggle svg {
       transition: transform 0.18s ease;
     }
+    .section-box.collapsed > .box-head .head-chevron,
+    .step-box.collapsed > .box-head .head-chevron { transform: rotate(-90deg); }
 
-    /* Drag handle to move the whole section (header + its cards) */
-    .section-move {
-      flex-shrink: 0;
-      margin-left: 8px;
-      width: 26px;
-      height: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      background: transparent;
-      color: #818CF8;
-      border-radius: 5px;
-      cursor: grab;
-      padding: 0;
-      touch-action: none; /* let pointer-drag work on touch without scrolling */
+    .head-title {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 700;
+      color: #4338CA;
+      outline: none;
+      min-height: 20px;
+      cursor: text;
+      white-space: pre-wrap;
+      word-break: break-word;
+      -webkit-user-select: text;
+      user-select: text;
     }
-    .section-move:hover { background: rgba(79, 70, 229, 0.12); color: #4338CA; }
-    .section-move:active { cursor: grabbing; }
+    .step-head .head-title { font-size: 13px; font-weight: 600; color: #5B21B6; }
+    .head-title:empty::before {
+      content: attr(data-placeholder);
+      color: #A5B4FC;
+      font-weight: 400;
+      font-style: italic;
+      pointer-events: none;
+    }
 
-    /* Pin button — marks a section as the destination for new pastes */
-    .section-pin {
+    /* Count of contained cards — shown only while the box is collapsed */
+    .head-count {
+      display: none;
       flex-shrink: 0;
-      margin-left: 4px;
-      width: 26px;
-      height: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: none;
-      background: transparent;
-      color: #818CF8;
-      border-radius: 5px;
-      cursor: pointer;
-      padding: 0;
-    }
-    .section-pin:hover { background: rgba(79, 70, 229, 0.12); color: #4338CA; }
-    .section-pin.active { background: #4F46E5; color: #fff; }
-    /* The pinned section reads as the active paste target */
-    .card.section-card.paste-target {
-      border-color: #4F46E5;
-      border-left-width: 4px;
-      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.35);
-      background: linear-gradient(90deg, #E0E7FF 0%, #EDE9FE 100%);
-    }
-    /* Paste-strip hint showing the current target section */
-    .paste-target-label {
-      color: #4F46E5;
-      font-weight: 600;
-      margin-left: 4px;
-    }
-    /* On a section header the controls sit inline at the right, so the delete
-       button flows next to the move handle instead of floating top-right. */
-    .card.section-card .card-del {
-      position: static;
-      opacity: 1;
-      flex-shrink: 0;
-      margin-left: 6px;
-    }
-    /* Member cards being carried along while their section is dragged */
-    .card.section-block-dragging { opacity: 0.55; }
-    .card.section-card.collapsed .section-toggle svg {
-      transform: rotate(-90deg);
-    }
-    /* Count of hidden cards, shown only while collapsed */
-    .section-count {
       font-size: 11.5px;
       font-weight: 600;
       color: #6366F1;
       background: #E0E7FF;
       border-radius: 10px;
       padding: 2px 9px;
-      margin-left: 8px;
       white-space: nowrap;
     }
-    .section-count:empty { display: none; } /* no empty pill when the section is expanded */
-    /* Cards hidden because their section is collapsed */
-    .card.section-collapsed-hidden,
-    .card-insertor.section-collapsed-hidden { display: none !important; }
+    .section-box.collapsed > .box-head > .head-count,
+    .step-box.collapsed > .box-head > .head-count { display: inline-block; }
 
-    .section-title {
-      font-size: 14px;
-      font-weight: 700;
-      color: #4338CA;
-      flex: 1;
-      outline: none;
-      min-height: 22px;
-      cursor: text;
-      padding: 10px 0;
-      white-space: pre-wrap;
-      word-break: break-word;
-      -webkit-user-select: text;
-      user-select: text;
+    /* Collapse hides the box body (cascading: a collapsed section also hides its
+       steps). Children stay in the DOM so reorder/numbering stay consistent. */
+    .section-box.collapsed > .card-row,
+    .section-box.collapsed > .step-box { display: none; }
+    .step-box.collapsed > .card-row { display: none; }
+
+    /* Head control buttons (move handle, pin, add, delete) */
+    .head-btn {
+      flex-shrink: 0;
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      background: transparent;
+      color: #818CF8;
+      border-radius: 5px;
+      cursor: pointer;
+      padding: 0;
     }
+    .head-btn:hover { background: rgba(79, 70, 229, 0.12); color: #4338CA; }
+    .head-move { cursor: grab; touch-action: none; }
+    .head-move:active { cursor: grabbing; }
+    .head-pin.active { background: #4F46E5; color: #fff; }
+    .head-add {
+      width: auto;
+      padding: 0 8px;
+      font-size: 11.5px;
+      font-weight: 700;
+      gap: 2px;
+    }
+    .head-del:hover { background: rgba(220, 38, 38, 0.12); color: #DC2626; }
 
-    .section-title:empty::before {
-      content: 'Section title…';
-      color: #A5B4FC;
-      font-weight: 400;
-      font-style: italic;
-      pointer-events: none;
+    /* The whole box being dragged */
+    .section-box.box-dragging,
+    .step-box.box-dragging { opacity: 0.55; }
+
+    /* Paste-strip hint showing the current paste target */
+    .paste-target-label {
+      color: #4F46E5;
+      font-weight: 600;
+      margin-left: 4px;
     }
 
     /* Section divider line in export preview */
@@ -828,6 +863,27 @@
     }
     .preview-section.collapsed .pv-chevron { transform: rotate(-90deg); }
     .preview-section .pv-sec-title { flex: 1; }
+    .preview-section .pv-sec-num {
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+      font-weight: 800;
+      background: rgba(99,102,241,0.14);
+      border-radius: 5px;
+      padding: 1px 7px;
+    }
+    /* Nested step header in the preview — lighter and indented under its section */
+    .preview-section.preview-step {
+      width: calc(60% - 24px);
+      margin-left: 24px;
+      background: #FCFCFF;
+      border-left: 3px solid #A5B4FC;
+      color: #5B21B6;
+      font-weight: 600;
+    }
+    .preview-section.preview-step .pv-sec-num { color: #6D28D9; background: rgba(124,58,237,0.12); }
+    /* Indent preview items by their nesting depth */
+    .preview-item.pv-indent-1 { margin-left: 16px; }
+    .preview-item.pv-indent-2 { margin-left: 36px; }
     .preview-section .pv-sec-count {
       font-weight: 600;
       font-size: 11px;
@@ -1796,6 +1852,13 @@
         padding: 7px 12px;
       }
 
+      /* Keep toolbar icon buttons square on small screens too. */
+      #toolbar-right button {
+        padding: 0;
+        width: 36px;
+        height: 36px;
+      }
+
       #cards-container {
         width: calc(100% - 28px);
         gap: 10px;
@@ -1856,7 +1919,6 @@
         </svg>
       </div>
       <span id="app-name">Pasteboard</span>
-      <img src="https://hitscounter.dev/api/hit?url=https%3A%2F%2Fchandrakanthpadi.github.io%2Fpasteboard%2F&label=Visits&icon=person-circle&color=%23198754&message=&style=flat&tz=UTC">
       <button id="btn-help" type="button" title="How to use this app" aria-label="How to use">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
@@ -1870,66 +1932,54 @@
     <div id="toolbar-right">
       <!-- <span id="count-badge" class="hidden"></span> -->
       <div class="nav-sep"></div>
-      <button id="btn-undo" class="btn-secondary" title="Undo (Ctrl+Z)" disabled>
+      <button id="btn-undo" class="btn-secondary" title="Undo (Ctrl+Z)" aria-label="Undo (Ctrl+Z)" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <polyline points="9 14 4 9 9 4" />
           <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
         </svg>
-        Undo
       </button>
-      <button id="btn-redo" class="btn-secondary" title="Redo (Ctrl+Y)" disabled>
+      <button id="btn-redo" class="btn-secondary" title="Redo (Ctrl+Y)" aria-label="Redo (Ctrl+Y)" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 14 20 9 15 4" />
           <path d="M4 20v-7a4 4 0 0 1 4-4h12" />
         </svg>
-        Redo
       </button>
       <div class="nav-sep"></div>
-      <button id="btn-add-section" class="btn-secondary">
+      <button id="btn-add-section" class="btn-secondary" title="Add section (Alt+S)" aria-label="Add section (Alt+S)">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <line x1="3" y1="6" x2="21" y2="6"/>
           <line x1="3" y1="12" x2="21" y2="12"/>
           <line x1="3" y1="18" x2="12" y2="18"/>
         </svg>
-        Add Section
       </button>
-      <button id="btn-toggle-sections" class="btn-secondary hidden" data-action="collapse" title="Collapse or expand every section">
+      <button id="btn-toggle-sections" class="btn-secondary hidden" data-action="collapse" title="Collapse all sections &amp; steps" aria-label="Collapse all sections and steps">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <polyline points="7 13 12 18 17 13"/>
           <polyline points="7 6 12 11 17 6"/>
         </svg>
-        <span class="toggle-label">Collapse All</span>
       </button>
-      <!-- <button id="btn-add-text" class="btn-secondary">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <line x1="12" y1="5" x2="12" y2="19" />
-          <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Add text card -->
-      </button>
-      <button id="btn-open-project" class="btn-secondary">
+      <div class="nav-sep"></div>
+      <button id="btn-open-project" class="btn-secondary" title="Open project" aria-label="Open project">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
         </svg>
-        Open
       </button>
-      <button id="btn-save-project" class="btn-secondary" disabled>
+      <button id="btn-save-project" class="btn-secondary" title="Save project" aria-label="Save project" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
           <polyline points="17 21 17 13 7 13 7 21" />
           <polyline points="7 3 7 8 15 8" />
         </svg>
-        Save
       </button>
       <input type="file" id="file-picker" accept=".json,application/json" hidden>
-      <button id="btn-export-pdf" disabled>
+      <div class="nav-sep"></div>
+      <button id="btn-export-pdf" class="has-label" title="Export to PDF" aria-label="Export to PDF" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -1939,7 +1989,7 @@
         </svg>
         Export PDF
       </button>
-      <button id="btn-export-docx" class="btn-secondary" disabled>
+      <button id="btn-export-docx" class="btn-secondary has-label" title="Export to Word" aria-label="Export to Word" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -1949,7 +1999,7 @@
         </svg>
         Export Word
       </button>
-      <button id="btn-download-app" class="btn-secondary" title="Download this app as a single HTML file to use offline">
+      <button id="btn-download-app" class="btn-secondary has-label" title="Download this app as a single HTML file to use offline" aria-label="Download app">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
           stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
@@ -1958,7 +2008,16 @@
         </svg>
         Download app
       </button>
-      <button id="btn-clear-all" class="btn-ghost" disabled>Clear all</button>
+      <button id="btn-clear-all" class="btn-ghost" title="Clear all" aria-label="Clear all" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <line x1="10" y1="11" x2="10" y2="17"/>
+          <line x1="14" y1="11" x2="14" y2="17"/>
+          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -2087,20 +2146,22 @@
         </section>
 
         <section class="help-sec">
-          <h3>2 · Organize with sections</h3>
+          <h3>2 · Organize with sections &amp; steps</h3>
           <ul>
-            <li><b>Add Section</b> creates a divider; every card after it belongs to that section until the next divider.</li>
-            <li>Click a section bar to <b>collapse / expand</b> it; the navbar button collapses or expands all at once.</li>
-            <li><b>Pin a section</b> (the 📌 button on its header) to make pastes land at the end of <i>that</i> section instead of the page bottom.</li>
-            <li><b>Reorder</b> by dragging any card; drag a section's handle to move the whole section with its cards.</li>
-            <li><b>Multi-select</b> with each card's checkbox, then <b>Group as Section</b> or <b>Delete</b> the whole batch (one undo reverses it).</li>
+            <li><b>Sections → Steps → Cards.</b> A <b>Section</b> is a top-level box; inside it you add <b>Steps</b>, and each step holds the cards. Use <b>Add Section</b> (<kbd>Alt</kbd>+<kbd>S</kbd>), each section's <b>+ Step</b> button (<kbd>Alt</kbd>+<kbd>T</kbd>), and <b>+ Card</b> on any section/step head.</li>
+            <li><b>Numbering</b> is automatic: sections <code>1</code>, steps <code>1.1</code>, cards <code>1.1.1</code>. Cards placed loosely (at the top of a section or above all sections) stay unnumbered and always sit on top.</li>
+            <li><b>Collapse / expand</b> by clicking a section or step bar. A section's double-chevron toggles all its steps at once; the navbar button collapses or expands everything.</li>
+            <li><b>Pin</b> (the 📌 on any section or step head) sets where pastes land — into that step, or as a loose card in that section. With nothing pinned, pastes flow into the last section's last step.</li>
+            <li><b>Reorder</b> by dragging a card into any step/section (or the loose area); drag a section's or step's handle to move the whole box with its contents.</li>
+            <li><b>Multi-select</b> with each card's checkbox, then <b>Group as Section</b>, <b>Group as Step</b>, or <b>Delete</b> the batch (one undo reverses it).</li>
+            <li><b>Two deletes</b> on each divider: <b>✕</b> removes just the divider and keeps its cards; the <b>🗑 trash</b> deletes the section/step <i>and</i> all its cards.</li>
           </ul>
         </section>
 
         <section class="help-sec">
           <h3>3 · Edit & annotate</h3>
           <ul>
-            <li>Click any card to open it. Use <kbd>←</kbd> / <kbd>→</kbd> to move between cards (across sections too).</li>
+            <li>Click any card to open it. Use <kbd>←</kbd> / <kbd>→</kbd> to move between cards (across steps and sections too).</li>
             <li>Add a <b>caption</b> under an image, or edit text-card content.</li>
             <li>On images, use the toolbar tools — <b>Pencil</b>, <b>Highlighter</b>, <b>Rectangle</b>, <b>Text</b>, <b>Eraser</b> — with per-tool color. Annotation <b>↶ Undo / ↷ Redo</b> is independent of the main undo.</li>
           </ul>
@@ -2109,8 +2170,8 @@
         <section class="help-sec">
           <h3>4 · Export & save</h3>
           <ul>
-            <li><b>Export PDF</b> — review the preview, then set a file name &amp; author for the cover page (with created date). Optionally attach the editable project <code>.json</code> inside the PDF.</li>
-            <li><b>Export Word</b> — builds a <code>.docx</code>; inserted files travel alongside in a <code>.zip</code> bundle.</li>
+            <li><b>Export PDF</b> and <b>Export Word</b> both — review the preview, set a file name &amp; author, and get a <b>cover page</b> plus a <b>Contents</b> page (sections &amp; steps with page numbers). Everything — the document, attachments, and the optional editable <code>.json</code> — comes down as a single <code>.zip</code>.</li>
+            <li>In Word, if the Contents page looks empty, right-click it and choose <b>Update Field</b> to fill in the page numbers.</li>
             <li><b>Save</b> / <b>Open</b> — store your work as a <code>.json</code> project and reload it later to keep editing.</li>
             <li><b>Download app</b> — save this whole app as one HTML file to use offline.</li>
           </ul>
@@ -2122,6 +2183,8 @@
             <li><kbd>Ctrl</kbd>+<kbd>V</kbd> Paste</li>
             <li><kbd>Ctrl</kbd>+<kbd>Z</kbd> Undo</li>
             <li><kbd>Ctrl</kbd>+<kbd>Y</kbd> Redo</li>
+            <li><kbd>Alt</kbd>+<kbd>S</kbd> Add section</li>
+            <li><kbd>Alt</kbd>+<kbd>T</kbd> Add step</li>
             <li><kbd>←</kbd> / <kbd>→</kbd> Previous / next card</li>
             <li><kbd>Esc</kbd> Close a dialog</li>
           </ul>
@@ -2170,6 +2233,7 @@
   <div id="selection-bar" class="hidden">
     <span id="sel-count"></span>
     <button id="sel-group-btn">Group as Section</button>
+    <button id="sel-group-step-btn">Group as Step</button>
     <button id="sel-del-btn">Delete</button>
     <button id="sel-clear-btn">Deselect all</button>
   </div>
@@ -2193,7 +2257,11 @@
     //   image: { dataURL, imageWidth, imageHeight, caption }
     //   text : { text }
     //   file    : { name, fileType, size, dataURL }
-    //   section : { title }
+    //   section : { title, collapsed }   — top-level divider; owns everything until the next section
+    //   step    : { title, collapsed }   — sub-divider; owns cards until the next step OR section
+    // Nesting (Section → Step → Card) is positional: a card belongs to the nearest
+    // preceding step, else the nearest preceding section, else it is a top-level
+    // "loose" card. renderBoard() turns this flat list into nested boxes.
     const items = [];
 
     // ── DOM refs ──────────────────────────────────────────────────────────────────
@@ -2227,7 +2295,7 @@
     // ── State ─────────────────────────────────────────────────────────────────────
     let openItemId = null;
     let selectedIds = new Set();
-    let pasteTargetSectionId = null;   // section to receive pastes; null = end of board
+    let pasteTargetId = null;   // section OR step to receive pastes; null = default (last step of last section, else end)
 
     // ── Annotation state ──────────────────────────────────────────────────────────
     const ANNOT_COLORS = ['#EF4444', '#FEF08A','#3B82F6'];
@@ -2432,7 +2500,6 @@
       const currentAnnsById = new Map();
       for (const it of items) currentAnnsById.set(it.id, it.annotations);
       items.length = 0;
-      CARDS.innerHTML = '';
       for (const raw of snap) {
         const restored = cloneItem(raw);
         if (currentAnnsById.has(raw.id)) {
@@ -2440,10 +2507,8 @@
           delete restored._cKey; delete restored._cUrl;
         }
         items.push(restored);
-        CARDS.appendChild(buildCard(items[items.length - 1]));
       }
-      reindex();
-      syncInsertors();
+      renderBoard();
       updateUI();
       if (openItemId) {
         if (items.find((it) => it.id === openItemId)) openModal(openItemId, false);
@@ -2501,11 +2566,12 @@
       document.getElementById('btn-add-text-empty')?.addEventListener('click', () => addTextCard());
       BTN_ADD_SECTION?.addEventListener('click', () => addSection());
       BTN_TOGGLE_SECTIONS?.addEventListener('click', () => {
-        // Collapse everything if any section is currently open; otherwise expand all.
-        const anyExpanded = items.some(it => it.type === 'section' && !it.collapsed);
+        // Collapse everything if any section/step is currently open; otherwise expand all.
+        const anyExpanded = items.some(it => (it.type === 'section' || it.type === 'step') && !it.collapsed);
         setAllSectionsCollapsed(anyExpanded);
       });
       document.getElementById('sel-group-btn').addEventListener('click', groupSelected);
+      document.getElementById('sel-group-step-btn')?.addEventListener('click', groupAsStep);
       document.getElementById('sel-del-btn').addEventListener('click', deleteSelected);
       document.getElementById('sel-clear-btn').addEventListener('click', clearSelection);
       BTN_SAVE.addEventListener('click', saveProject);
@@ -2530,6 +2596,18 @@
           e.preventDefault();
           if (modalOpen && MODAL._innerRedo) MODAL._innerRedo(); else redo();
         }
+      });
+
+      // Alt+S adds a section; Alt+T adds a step (into the last section). Skip while
+      // typing in a field or while the detail modal is open.
+      document.addEventListener('keydown', (e) => {
+        if (!e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+        const t = e.target;
+        if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) return;
+        if (!MODAL.classList.contains('hidden')) return;
+        const k = e.key.toLowerCase();
+        if (k === 's') { e.preventDefault(); addSection(); }
+        else if (k === 't') { e.preventDefault(); addStepIntoLastSection(); }
       });
 
       MODAL_CLOSE.addEventListener('click', closeModal);
@@ -2562,6 +2640,7 @@
         }
       });
 
+      renderBoard();
       updateUI();
       resetHistory();
 
@@ -2626,95 +2705,134 @@
         size: file.size,
         dataURL,
       };
-      const card = buildCard(entry);
-      insertEntryAfter(entry, card, afterId);
+      insertEntryAfter(entry, afterId);
       if (!defer) {
-        reindex();
-        syncInsertors();
+        renderBoard();
         updateUI();
         pushHistory();
-        card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        scrollToCard(id);
       }
-      return card;
+      return id;
     }
 
-    // ── Positional insert helper ──────────────────────────────────────────────────
-    // Insert a freshly-built entry + card into items[] and the DOM immediately after
-    // the card with id `afterId`. Mirrors addTextCard's afterId logic but tolerates
-    // the anchor being a section header (which has no trailing .card-insertor).
-    // afterId === null (or a stale id) falls back to appending at the very end.
-    function insertEntryAfter(entry, card, afterId) {
-      if (!afterId) { items.push(entry); CARDS.appendChild(card); return; }
-      const afterCard = CARDS.querySelector(`.card[data-id="${afterId}"]`);
-      if (!afterCard) { items.push(entry); CARDS.appendChild(card); return; }
-      const afterIdx = items.findIndex(it => it.id === afterId);
-      items.splice(afterIdx + 1, 0, entry);
-      const next = afterCard.nextSibling;
-      const refNode = (next && next.nodeType === 1 && next.classList.contains('card-insertor'))
-        ? next.nextSibling : next;   // step over a normal card's insertor; headers have none
-      CARDS.insertBefore(card, refNode);
+    // ── Positional helpers ────────────────────────────────────────────────────────
+    const isCardType = (t) => t === 'image' || t === 'text' || t === 'file';
+
+    // Splice a freshly-built entry into items[] immediately after `afterId`. The DOM
+    // is rebuilt afterwards by renderBoard(), so this only touches the data model.
+    // afterId === null (or a stale id) appends at the very end.
+    function insertEntryAfter(entry, afterId) {
+      if (!afterId) { items.push(entry); return; }
+      const idx = items.findIndex(it => it.id === afterId);
+      if (idx === -1) items.push(entry);
+      else items.splice(idx + 1, 0, entry);
     }
 
-    // The id of the card that a paste should land after: the last card of the pinned
-    // section's region (or its header when the section is empty). null = append at end.
-    function pasteAnchorId() {
-      if (!pasteTargetSectionId) return null;
-      const header = CARDS.querySelector(`.card.section-card[data-id="${pasteTargetSectionId}"]`);
-      if (!header) return null;                          // stale (section deleted)
-      let lastId = header.dataset.id;                    // empty section → after the header
-      let n = header.nextElementSibling;
-      while (n && !n.classList.contains('section-card')) {
-        if (n.classList.contains('card')) lastId = n.dataset.id;
-        n = n.nextElementSibling;
+    function scrollToCard(id) {
+      CARDS.querySelector(`.card[data-id="${id}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // The nearest preceding section id for the item at index `idx` (null = top level).
+    function enclosingSectionId(idx) {
+      for (let j = idx - 1; j >= 0; j--) if (items[j].type === 'section') return items[j].id;
+      return null;
+    }
+
+    // The id of the last item belonging to a section/step container, or the container
+    // id itself when it is empty. A section region runs to the next section (its steps
+    // and their cards included); a step region to the next step OR section.
+    function lastIdOfContainer(containerId) {
+      const idx = items.findIndex(it => it.id === containerId);
+      if (idx === -1) return null;
+      const isSection = items[idx].type === 'section';
+      let lastId = containerId;
+      for (let j = idx + 1; j < items.length; j++) {
+        const t = items[j].type;
+        if (t === 'section') break;
+        if (!isSection && t === 'step') break;
+        lastId = items[j].id;
       }
       return lastId;
     }
 
-    // If the pinned target section is collapsed, expand it so freshly pasted cards
-    // aren't hidden. (applyCollapseStates() later re-syncs visibility.)
+    // The id of the last direct (pre-step) card of a section, or the section id when
+    // it has no direct cards yet. Stops at the section's first step/next section.
+    function sectionDirectAnchor(sectionId) {
+      const idx = items.findIndex(it => it.id === sectionId);
+      if (idx === -1) return sectionId;
+      let lastId = sectionId;
+      for (let j = idx + 1; j < items.length; j++) {
+        const t = items[j].type;
+        if (t === 'section' || t === 'step') break;
+        lastId = items[j].id;
+      }
+      return lastId;
+    }
+
+    // The id of the card a paste should land after. With a pinned section/step, the
+    // end of that container; otherwise the end of the last section (so pastes flow
+    // into its last step), falling back to the very end of the board (loose cards).
+    function pasteAnchorId() {
+      if (pasteTargetId) {
+        const t = items.find(it => it.id === pasteTargetId);
+        if (!t) return null;
+        // Pinning a SECTION drops pastes as loose (direct) cards above its steps;
+        // pinning a STEP drops them into that step.
+        return t.type === 'section' ? sectionDirectAnchor(pasteTargetId) : lastIdOfContainer(pasteTargetId);
+      }
+      let lastSectionId = null;
+      for (const it of items) if (it.type === 'section') lastSectionId = it.id;
+      return lastSectionId ? lastIdOfContainer(lastSectionId) : null;
+    }
+
+    // If the pinned target (and, for a step, its enclosing section) is collapsed,
+    // expand it so freshly pasted cards aren't hidden. renderBoard() re-syncs the DOM.
     function expandPasteTargetIfCollapsed() {
-      if (!pasteTargetSectionId) return;
-      const entry = items.find(it => it.id === pasteTargetSectionId && it.type === 'section');
-      if (entry && entry.collapsed) {
-        entry.collapsed = false;
-        CARDS.querySelector(`.card.section-card[data-id="${pasteTargetSectionId}"]`)?.classList.remove('collapsed');
+      if (!pasteTargetId) return;
+      const idx = items.findIndex(it => it.id === pasteTargetId);
+      if (idx === -1) return;
+      const entry = items[idx];
+      entry.collapsed = false;
+      if (entry.type === 'step') {
+        const secId = enclosingSectionId(idx);
+        const sec = secId && items.find(it => it.id === secId);
+        if (sec) sec.collapsed = false;
       }
     }
 
-    // Pin/unpin a section as the paste target (clicking the active pin clears it).
+    // Pin/unpin a section or step as the paste target (clicking the active pin clears it).
     function setPasteTarget(id) {
-      pasteTargetSectionId = (pasteTargetSectionId === id) ? null : id;
+      pasteTargetId = (pasteTargetId === id) ? null : id;
       refreshPasteTargetUI();
     }
 
-    // Re-apply the pin's visual state across all section headers + the paste strip.
-    // Self-heals when the pinned section no longer exists. Called from
-    // applyCollapseStates() so it survives every reindex/reorder/delete.
+    // Re-apply the pin's visual state across all section/step heads + the paste strip.
+    // Self-heals when the pinned container no longer exists. Called from renderBoard().
     function refreshPasteTargetUI() {
-      if (pasteTargetSectionId &&
-          !CARDS.querySelector(`.card.section-card[data-id="${pasteTargetSectionId}"]`)) {
-        pasteTargetSectionId = null;
+      if (pasteTargetId &&
+          !CARDS.querySelector(`.section-box[data-id="${pasteTargetId}"], .step-box[data-id="${pasteTargetId}"]`)) {
+        pasteTargetId = null;
       }
-      CARDS.querySelectorAll('.card.section-card').forEach(c => {
-        const on = c.dataset.id === pasteTargetSectionId;
-        c.classList.toggle('paste-target', on);
-        const pin = c.querySelector('.section-pin');
+      CARDS.querySelectorAll('.section-box, .step-box').forEach(box => {
+        const on = box.dataset.id === pasteTargetId;
+        box.classList.toggle('paste-target', on);
+        const pin = box.querySelector(':scope > .box-head > .head-pin');
         if (pin) {
           pin.classList.toggle('active', on);
-          pin.title = on ? 'Pasting into this section — click to clear'
-                         : 'Paste new screenshots into this section';
+          pin.title = on ? 'Pasting here — click to clear' : 'Paste new screenshots here';
         }
       });
       updatePasteStripTarget();
     }
 
-    // Show "· Pasting into <title>" in the paste strip when a section is pinned.
+    // Show "· Pasting into <title>" in the paste strip when a container is pinned.
     function updatePasteStripTarget() {
       const label = document.getElementById('paste-target-label');
       if (!label) return;
-      if (!pasteTargetSectionId) { label.classList.add('hidden'); label.textContent = ''; return; }
-      const entry = items.find(it => it.id === pasteTargetSectionId && it.type === 'section');
-      const title = entry && entry.title && entry.title.trim() ? entry.title.trim() : 'Untitled section';
+      const entry = pasteTargetId && items.find(it => it.id === pasteTargetId);
+      if (!entry) { label.classList.add('hidden'); label.textContent = ''; return; }
+      const kind = entry.type === 'step' ? 'step' : 'section';
+      const title = entry.title && entry.title.trim() ? entry.title.trim() : `Untitled ${kind}`;
       label.textContent = `· Pasting into “${title}”`;
       label.classList.remove('hidden');
     }
@@ -2726,7 +2844,7 @@
       // Let editable fields (e.g. an active section title) handle their own paste
       // natively — don't also spawn a card.
       const el = event.target instanceof Element ? event.target : event.target?.parentElement;
-      if (el && (el.isContentEditable || el.closest('input, textarea, [contenteditable="true"], .section-title'))) return;
+      if (el && (el.isContentEditable || el.closest('input, textarea, [contenteditable="true"], .head-title'))) return;
 
       const clipData = event.clipboardData;
       if (!clipData) return;
@@ -2751,7 +2869,7 @@
         handled = true;
         expandPasteTargetIfCollapsed();
         let anchorId = pasteAnchorId();
-        let lastCard = null;
+        let lastId = null;
         for (const file of files) {
           const isImage = (file.type || '').startsWith('image/');
           try {
@@ -2760,24 +2878,23 @@
               const { width, height } = await imgDimensions(dataURL);
               const id = crypto.randomUUID();
               const entry = { id, type: 'image', dataURL, imageWidth: width, imageHeight: height, caption: '', annotations: [] };
-              lastCard = buildCard(entry);
-              insertEntryAfter(entry, lastCard, anchorId);
+              insertEntryAfter(entry, anchorId);
               anchorId = id;
+              lastId = id;
             } else {
               // PDF, DOCX, MSG, etc. — becomes an attachment card.
-              lastCard = await addFileCard(file, true, anchorId);
-              anchorId = lastCard?.dataset.id ?? anchorId;
+              lastId = await addFileCard(file, true, anchorId);
+              anchorId = lastId ?? anchorId;
             }
           } catch {
             const label = isImage ? 'screenshot' : `file "${file.name}"`;
             toast(`Could not add ${label} — please try again.`);
           }
         }
-        reindex();
-        syncInsertors();
+        renderBoard();
         updateUI();
         pushHistory();
-        if (lastCard) lastCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        if (lastId) scrollToCard(lastId);
       }
 
       if (!handled) {
@@ -2791,13 +2908,11 @@
           expandPasteTargetIfCollapsed();
           const id = crypto.randomUUID();
           const entry = { id, type: 'text', text: trimmed };
-          const card = buildCard(entry);
-          insertEntryAfter(entry, card, pasteAnchorId());
-          reindex();
-          syncInsertors();
+          insertEntryAfter(entry, pasteAnchorId());
+          renderBoard();
           updateUI();
           pushHistory();
-          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          scrollToCard(id);
         }
       }
     }
@@ -2806,30 +2921,53 @@
     function addTextCard(afterId = null) {
       const id = crypto.randomUUID();
       const entry = { id, type: 'text', text: '' };
-      const card = buildCard(entry);
-      insertEntryAfter(entry, card, afterId);
-
-      reindex();
-      syncInsertors();
+      insertEntryAfter(entry, afterId);
+      renderBoard();
       updateUI();
       pushHistory();
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      scrollToCard(id);
       openModal(id);
     }
 
     function addSection(afterId = null) {
       const id = crypto.randomUUID();
-      const entry = { id, type: 'section', title: '' };
-      const card = buildCard(entry);
-      insertEntryAfter(entry, card, afterId);
-
-      reindex();
-      syncInsertors();
+      const entry = { id, type: 'section', title: '', collapsed: false };
+      insertEntryAfter(entry, afterId);
+      renderBoard();
       updateUI();
       pushHistory();
-      card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      // Focus the title for immediate editing
-      setTimeout(() => card.querySelector('.section-title')?.focus(), 50);
+      focusBoxTitle(id);
+    }
+
+    // Add a step. From a section head's "+ Step", afterId is the end of that section
+    // so the new step lands as that section's last step.
+    function addStep(afterId = null) {
+      const id = crypto.randomUUID();
+      const entry = { id, type: 'step', title: '', collapsed: false };
+      insertEntryAfter(entry, afterId);
+      renderBoard();
+      updateUI();
+      pushHistory();
+      focusBoxTitle(id);
+    }
+
+    function focusBoxTitle(id) {
+      const box = CARDS.querySelector(`.section-box[data-id="${id}"], .step-box[data-id="${id}"]`);
+      box?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setTimeout(() => box?.querySelector(':scope > .box-head > .head-title')?.focus(), 50);
+    }
+
+    // Keyboard shortcut helper for Alt+T. Adds the step into the pinned section (or the
+    // section enclosing the pinned step) when something is pinned; otherwise into the
+    // last section, or as a top-level step if there are no sections yet.
+    function addStepIntoLastSection() {
+      let sectionId = null;
+      if (pasteTargetId) {
+        const idx = items.findIndex((it) => it.id === pasteTargetId);
+        if (idx !== -1) sectionId = items[idx].type === 'section' ? pasteTargetId : enclosingSectionId(idx);
+      }
+      if (!sectionId) for (const it of items) if (it.type === 'section') sectionId = it.id;
+      addStep(sectionId ? lastIdOfContainer(sectionId) : null);
     }
 
     // ── Selection helpers ─────────────────────────────────────────────────────────
@@ -2867,137 +3005,328 @@
     function deleteSelected() {
       if (selectedIds.size === 0) return;
       // Snapshot the ids before clearSelection() empties the set, then remove
-      // each from items[] and the DOM. One reindex/history entry for the batch,
-      // so a single Undo restores every deleted card.
-      const ids = [...selectedIds];
+      // each from items[]. One render/history entry for the batch, so a single
+      // Undo restores every deleted card.
+      const ids = new Set(selectedIds);
       clearSelection();
-      for (const id of ids) {
-        const idx = items.findIndex((s) => s.id === id);
-        if (idx !== -1) items.splice(idx, 1);
-        CARDS.querySelector(`.card[data-id="${id}"]`)?.remove();
-      }
-      reindex();
-      syncInsertors();
+      for (let i = items.length - 1; i >= 0; i--) if (ids.has(items[i].id)) items.splice(i, 1);
+      renderBoard();
       updateUI();
       pushHistory();
     }
 
-    function groupSelected() {
-      if (selectedIds.size === 0) return;
-      const order = [...CARDS.querySelectorAll('.card')].map(c => c.dataset.id);
-      const selectedOrdered = order.filter(id => selectedIds.has(id));
-      if (!selectedOrdered.length) return;
+    // Selected card ids in items[] (document) order. Selection only ever applies to
+    // cards (image/text/file), never section/step heads.
+    function orderedSelectedCardIds() {
+      return items.filter(it => selectedIds.has(it.id) && isCardType(it.type)).map(it => it.id);
+    }
+
+    function groupSelected() { groupAs('section'); }
+    function groupAsStep() { groupAs('step'); }
+
+    // Pull the selected cards under a freshly-created section/step marker. The marker
+    // is placed at the END of the enclosing section's region (or the end of the board
+    // for top-level), so the grouped cards form a contiguous trailing block — a divider
+    // owns everything until the next divider, so inserting mid-section would otherwise
+    // swallow the non-selected cards that follow.
+    function groupAs(kind) {
+      const sel = orderedSelectedCardIds();
+      if (!sel.length) return;
+      const selSet = new Set(sel);
+      const firstIdx = items.findIndex(it => it.id === sel[0]);
+      const sectionId = enclosingSectionId(firstIdx);   // section the first card lives in (null = top level)
       clearSelection();
+      const picked = sel.map(id => items.find(it => it.id === id)).filter(Boolean);
+      for (let i = items.length - 1; i >= 0; i--) if (selSet.has(items[i].id)) items.splice(i, 1);
 
-      const firstCard = CARDS.querySelector(`.card[data-id="${selectedOrdered[0]}"]`);
-      if (!firstCard) return;
-
-      // Place the new section at the end of the first selected card's section region
-      // (just before the next section header, or at the very end). This keeps
-      // existing sections intact — their non-selected cards aren't split off — while
-      // still letting us pull together selected cards from any sections.
-      let boundaryRef = firstCard.nextElementSibling;
-      while (boundaryRef && !boundaryRef.classList.contains('section-card')) {
-        boundaryRef = boundaryRef.nextElementSibling;
+      let pos;
+      if (sectionId && items.some(it => it.id === sectionId)) {
+        // End of that section's region (after its existing steps/cards).
+        const anchorId = lastIdOfContainer(sectionId);
+        pos = items.findIndex(it => it.id === anchorId) + 1;
+      } else {
+        pos = items.length;   // top-level: append at the very end
       }
 
-      const entry = { id: crypto.randomUUID(), type: 'section', title: '' };
-      const sectionCard = buildCard(entry);
-      items.push(entry);
-      CARDS.insertBefore(sectionCard, boundaryRef); // boundaryRef === null → append
-
-      // Move every selected card, in its existing order, to sit contiguously right
-      // after the new header — even ones that lived in other sections.
-      let anchor = sectionCard;
-      for (const sid of selectedOrdered) {
-        const c = CARDS.querySelector(`.card[data-id="${sid}"]`);
-        if (!c) continue;
-        anchor.after(c);
-        anchor = c;
-      }
-
-      syncOrder(); // rebuild items[] from the new DOM order
-      reindex();
-      syncInsertors();
+      const marker = { id: crypto.randomUUID(), type: kind, title: '', collapsed: false };
+      items.splice(pos, 0, marker, ...picked);
+      renderBoard();
       updateUI();
       pushHistory();
-      sectionCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      setTimeout(() => sectionCard.querySelector('.section-title')?.focus(), 50);
+      focusBoxTitle(marker.id);
     }
 
-    // ── Sync insert-between buttons ───────────────────────────────────────────────
-    function syncInsertors() {
-      CARDS.querySelectorAll('.card-insertor').forEach(el => el.remove());
-      const cards = [...CARDS.querySelectorAll('.card')];
-      cards.forEach(card => {
-        // No insert button between a section header and its first node.
-        if (card.classList.contains('section-card')) return;
-        const ins = document.createElement('div');
-        ins.className = 'card-insertor';
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'card-insertor-btn';
-        btn.title = 'Insert text card here';
-        btn.textContent = '+';
-        btn.addEventListener('click', () => addTextCard(card.dataset.id));
-        ins.appendChild(btn);
-        card.after(ins);
-      });
-      applyCollapseStates();
-    }
+    // ── Board render ──────────────────────────────────────────────────────────────
+    // Walk the flat items[] into a nested tree and compute hierarchical numbers.
+    // Returns { root, numById }. `root` is an ordered list of top-level blocks:
+    //   { kind:'loose', cards:[{entry,num}] }
+    //   { kind:'section', entry, num, count, directCards:[{entry,num}], steps:[stepNode] }
+    //   { kind:'step', entry, num, count, cards:[{entry,num}] }   (top-level or nested)
+    function buildTree() {
+      const root = [];
+      const numById = new Map();
+      let looseBlock = null;
+      let curSection = null;   // section node
+      let curStep = null;      // step node
+      let secN = 0, stepN = 0, cardN = 0;
 
-    // Hide/show the cards (and their insert buttons) that belong to a collapsed
-    // section, and show a "N hidden" badge on each collapsed section header. A
-    // section owns every card after it up to the next section header; cards before
-    // the first section are never collapsed.
-    function applyCollapseStates() {
-      let collapsed = false;
-      let countEl = null;
-      let hidden = 0;
-      const flush = () => { if (countEl) countEl.textContent = hidden ? `${hidden}` : ''; };
-      for (const el of CARDS.children) {
-        if (el.classList.contains('section-card')) {
-          flush();
-          collapsed = el.classList.contains('collapsed');
-          countEl = el.querySelector('.section-count');
-          hidden = 0;
-          el.classList.remove('section-collapsed-hidden');
-          continue;
+      for (const entry of items) {
+        if (entry.type === 'section') {
+          secN++; stepN = 0; cardN = 0;
+          const num = String(secN);
+          curSection = { kind: 'section', entry, num, count: 0, directCards: [], steps: [] };
+          curStep = null;
+          root.push(curSection);
+          numById.set(entry.id, num);
+        } else if (entry.type === 'step') {
+          stepN++; cardN = 0;
+          const num = curSection ? `${curSection.num}.${stepN}` : String(stepN);
+          curStep = { kind: 'step', entry, num, count: 0, cards: [] };
+          if (curSection) curSection.steps.push(curStep);
+          else root.push(curStep);
+          numById.set(entry.id, num);
+        } else {
+          // Only cards inside a step are numbered (1.1.1). Loose cards — both
+          // top-level and the "direct" cards sitting above a section's steps — carry
+          // no number and render on top.
+          let num = '', bucket;
+          if (curStep) { cardN++; num = `${curStep.num}.${cardN}`; bucket = curStep.cards; curStep.count++; }
+          else if (curSection) { bucket = curSection.directCards; }
+          else {
+            if (!looseBlock) { looseBlock = { kind: 'loose', cards: [] }; root.push(looseBlock); }
+            bucket = looseBlock.cards;
+          }
+          bucket.push({ entry, num });
+          numById.set(entry.id, num);
+          if (curSection) curSection.count++;
         }
-        el.classList.toggle('section-collapsed-hidden', collapsed);
-        if (collapsed && el.classList.contains('card')) hidden++;
       }
-      flush();
+      return { root, numById };
+    }
+
+    // Map of id → hierarchical number for every entry. Used by the modal and exports.
+    function computeNumbering() { return buildTree().numById; }
+
+    // Rebuild the entire board DOM from items[]. This is the single DOM writer — every
+    // mutation routes through here, so the nested structure and numbering stay in sync.
+    function renderBoard() {
+      const { root } = buildTree();
+      CARDS.innerHTML = '';
+      for (const block of root) {
+        if (block.kind === 'loose') {
+          if (block.cards.length) CARDS.appendChild(renderCardRow(block.cards, 'loose-zone', false));
+        } else if (block.kind === 'section') {
+          CARDS.appendChild(renderSectionBox(block));
+        } else if (block.kind === 'step') {
+          CARDS.appendChild(renderStepBox(block));
+        }
+      }
       refreshSectionToggle();
       refreshPasteTargetUI();
     }
 
-    // Set every section's collapsed state at once (the navbar Collapse/Expand All
-    // button). One history entry for the whole batch.
-    function setAllSectionsCollapsed(collapsed) {
-      let changed = false;
-      for (const entry of items) {
-        if (entry.type !== 'section') continue;
-        if (entry.collapsed === collapsed) continue;
-        entry.collapsed = collapsed;
-        const card = CARDS.querySelector(`.card.section-card[data-id="${entry.id}"]`);
-        if (card) card.classList.toggle('collapsed', collapsed);
-        changed = true;
+    // A horizontal card grid, with a "+" insert button after each card.
+    function renderCardRow(cards, extraClass, showHintWhenEmpty) {
+      const row = document.createElement('div');
+      row.className = 'card-row' + (extraClass ? ' ' + extraClass : '');
+      if (!cards.length && showHintWhenEmpty) row.classList.add('empty-hint');
+      for (const { entry, num } of cards) {
+        const card = buildCard(entry);
+        const seq = card.querySelector('.card-seq');
+        if (seq) { if (num) seq.textContent = num; else seq.remove(); } // loose cards have no number badge
+        row.appendChild(card);
+        row.appendChild(buildInsertor(entry.id));
       }
-      if (!changed) return;
-      applyCollapseStates();
+      return row;
+    }
+
+    function buildInsertor(afterId) {
+      const ins = document.createElement('div');
+      ins.className = 'card-insertor';
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'card-insertor-btn';
+      btn.title = 'Insert text card here';
+      btn.textContent = '+';
+      btn.addEventListener('click', () => addTextCard(afterId));
+      ins.appendChild(btn);
+      return ins;
+    }
+
+    function renderSectionBox(node) {
+      const box = document.createElement('div');
+      box.className = 'section-box' + (node.entry.collapsed ? ' collapsed' : '');
+      box.dataset.id = node.entry.id;
+      box.appendChild(buildBoxHead(node, 'section'));
+      // Direct (pre-step) cards. Show the drop hint only when the section is otherwise empty.
+      box.appendChild(renderCardRow(node.directCards, 'section-direct', node.steps.length === 0));
+      for (const step of node.steps) box.appendChild(renderStepBox(step));
+      return box;
+    }
+
+    function renderStepBox(node) {
+      const box = document.createElement('div');
+      box.className = 'step-box' + (node.entry.collapsed ? ' collapsed' : '');
+      box.dataset.id = node.entry.id;
+      box.appendChild(buildBoxHead(node, 'step'));
+      box.appendChild(renderCardRow(node.cards, 'step-body', true));
+      return box;
+    }
+
+    // The header bar shared by section and step boxes: number, chevron, editable
+    // title, count pill, pin, move handle, add buttons, delete.
+    function buildBoxHead(node, kind) {
+      const entry = node.entry;
+      const head = document.createElement('div');
+      head.className = 'box-head ' + (kind === 'section' ? 'section-head' : 'step-head');
+
+      const num = document.createElement('span');
+      num.className = 'head-num';
+      num.textContent = node.num;
+
+      const chev = document.createElement('span');
+      chev.className = 'head-chevron';
+      chev.setAttribute('aria-hidden', 'true');
+      chev.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
+
+      const title = document.createElement('div');
+      title.className = 'head-title';
+      title.contentEditable = 'true';
+      title.dataset.placeholder = kind === 'section' ? 'Section title…' : 'Step title…';
+      title.textContent = entry.title || '';
+      title.addEventListener('input', () => { entry.title = title.textContent; pushHistoryDebounced(); });
+      title.addEventListener('blur', () => { entry.title = title.textContent.trim(); flushPendingHistory(); updatePasteStripTarget(); });
+      title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } });
+
+      const count = document.createElement('span');
+      count.className = 'head-count';
+      count.textContent = `${node.count} item${node.count === 1 ? '' : 's'}`;
+
+      const pin = document.createElement('button');
+      pin.type = 'button';
+      pin.className = 'head-btn head-pin';
+      pin.title = 'Paste new screenshots here';
+      pin.setAttribute('aria-label', 'Set as paste target');
+      pin.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.7-3.4a2 2 0 0 1-.3-1V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7.6a2 2 0 0 1-.3 1L5 17z"/></svg>`;
+      pin.addEventListener('click', (e) => { e.stopPropagation(); setPasteTarget(entry.id); });
+
+      const move = document.createElement('button');
+      move.type = 'button';
+      move.className = 'head-btn head-move';
+      move.title = kind === 'section' ? 'Drag to move this section' : 'Drag to move this step';
+      move.setAttribute('aria-label', 'Move');
+      move.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.7"/><circle cx="15" cy="5" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="19" r="1.7"/><circle cx="15" cy="19" r="1.7"/></svg>`;
+      attachBoxDrag(move, entry.id, kind);
+
+      const addCard = document.createElement('button');
+      addCard.type = 'button';
+      addCard.className = 'head-btn head-add';
+      addCard.title = 'Add a card here';
+      addCard.textContent = '+ Card';
+      addCard.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const anchor = kind === 'section' ? sectionDirectAnchor(entry.id) : lastIdOfContainer(entry.id);
+        addTextCard(anchor);
+      });
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'head-btn head-del';
+      del.title = kind === 'section' ? 'Remove section divider (keep its cards)' : 'Remove step divider (keep its cards)';
+      del.setAttribute('aria-label', 'Remove divider only');
+      del.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+      del.addEventListener('click', (e) => { e.stopPropagation(); removeItem(entry.id); });
+
+      const delAll = document.createElement('button');
+      delAll.type = 'button';
+      delAll.className = 'head-btn head-del';
+      delAll.title = kind === 'section' ? 'Delete section AND all its cards' : 'Delete step AND all its cards';
+      delAll.setAttribute('aria-label', 'Delete with contents');
+      delAll.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`;
+      delAll.addEventListener('click', (e) => { e.stopPropagation(); removeContainer(entry.id); });
+
+      head.append(num, chev, title, count, pin);
+      if (kind === 'section') {
+        // Collapse/expand all steps in this section (shown only when it has steps).
+        if (node.steps.length) {
+          const toggleSteps = document.createElement('button');
+          toggleSteps.type = 'button';
+          toggleSteps.className = 'head-btn';
+          const anyOpen = node.steps.some((s) => !s.entry.collapsed);
+          toggleSteps.title = anyOpen ? 'Collapse all steps in this section' : 'Expand all steps in this section';
+          toggleSteps.setAttribute('aria-label', 'Collapse or expand this section’s steps');
+          toggleSteps.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="7 13 12 18 17 13"/><polyline points="7 6 12 11 17 6"/></svg>`;
+          toggleSteps.addEventListener('click', (e) => { e.stopPropagation(); toggleSectionSteps(entry.id); });
+          head.append(toggleSteps);
+        }
+        const addStepBtn = document.createElement('button');
+        addStepBtn.type = 'button';
+        addStepBtn.className = 'head-btn head-add';
+        addStepBtn.title = 'Add a step to this section';
+        addStepBtn.textContent = '+ Step';
+        addStepBtn.addEventListener('click', (e) => { e.stopPropagation(); addStep(lastIdOfContainer(entry.id)); });
+        head.append(addStepBtn);
+      }
+      head.append(addCard, move, del, delAll);
+
+      // Click the bar (not a control or the title) toggles collapse.
+      head.addEventListener('click', (e) => {
+        if (e.target.closest('.head-title, .head-btn')) return;
+        entry.collapsed = !entry.collapsed;
+        const box = head.closest('.section-box, .step-box');
+        box?.classList.toggle('collapsed', entry.collapsed);
+        refreshSectionToggle();
+        pushHistory();
+      });
+      return head;
+    }
+
+    // Collapse/expand just the steps belonging to one section. Collapses all of them
+    // if any is currently open, otherwise expands all (mirrors the navbar toggle,
+    // scoped to this section). The section itself is left expanded.
+    function toggleSectionSteps(sectionId) {
+      const idx = items.findIndex((it) => it.id === sectionId);
+      if (idx === -1) return;
+      const steps = [];
+      for (let j = idx + 1; j < items.length; j++) {
+        const t = items[j].type;
+        if (t === 'section') break;
+        if (t === 'step') steps.push(items[j]);
+      }
+      if (!steps.length) return;
+      const collapse = steps.some((s) => !s.collapsed);
+      steps.forEach((s) => { s.collapsed = collapse; });
+      renderBoard();
       pushHistory();
     }
 
-    // Keep the Collapse/Expand All button hidden when there are no sections, and
+    // Set every section AND step collapsed state at once (navbar Collapse/Expand All).
+    function setAllSectionsCollapsed(collapsed) {
+      let changed = false;
+      for (const entry of items) {
+        if (entry.type !== 'section' && entry.type !== 'step') continue;
+        if (entry.collapsed === collapsed) continue;
+        entry.collapsed = collapsed;
+        changed = true;
+      }
+      if (!changed) return;
+      renderBoard();
+      pushHistory();
+    }
+
+    // Keep the Collapse/Expand All button hidden when there are no sections/steps, and
     // show the label for the action it will perform next.
     function refreshSectionToggle() {
       if (!BTN_TOGGLE_SECTIONS) return;
-      const sections = items.filter(it => it.type === 'section');
-      BTN_TOGGLE_SECTIONS.classList.toggle('hidden', sections.length === 0);
-      if (!sections.length) return;
-      const anyExpanded = sections.some(s => !s.collapsed);
+      const dividers = items.filter(it => it.type === 'section' || it.type === 'step');
+      BTN_TOGGLE_SECTIONS.classList.toggle('hidden', dividers.length === 0);
+      if (!dividers.length) return;
+      const anyExpanded = dividers.some(s => !s.collapsed);
       BTN_TOGGLE_SECTIONS.dataset.action = anyExpanded ? 'collapse' : 'expand';
+      // The button is icon-only; convey the next action via its tooltip.
+      const tip = anyExpanded ? 'Collapse all sections & steps' : 'Expand all sections & steps';
+      BTN_TOGGLE_SECTIONS.title = tip;
+      BTN_TOGGLE_SECTIONS.setAttribute('aria-label', tip);
       const label = BTN_TOGGLE_SECTIONS.querySelector('.toggle-label');
       if (label) label.textContent = anyExpanded ? 'Collapse All' : 'Expand All';
     }
@@ -3005,7 +3334,7 @@
     // ── Card builder ──────────────────────────────────────────────────────────────
     function buildCard(entry) {
       const card = document.createElement('div');
-      const extraClass = entry.type === 'text' ? ' text-card' : entry.type === 'file' ? ' file-card' : entry.type === 'section' ? ' section-card' : '';
+      const extraClass = entry.type === 'text' ? ' text-card' : entry.type === 'file' ? ' file-card' : '';
       card.className = 'card' + extraClass;
       card.dataset.id = entry.id;
       card.draggable = false; // reordering is handled via pointer events, not native HTML5 DnD
@@ -3065,52 +3394,6 @@
         sizeEl.textContent = formatFileSize(entry.size);
         thumb.append(badge, nameEl, sizeEl);
         card.append(seq, del, selChk, thumb);
-      } else if (entry.type === 'section') {
-        if (entry.collapsed) card.classList.add('collapsed');
-
-        // Purely a visual indicator — clicks fall through (pointer-events:none) to
-        // the section card, whose click handler does the actual collapse toggle.
-        const toggle = document.createElement('span');
-        toggle.className = 'section-toggle';
-        toggle.setAttribute('aria-hidden', 'true');
-        toggle.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
-
-        const title = document.createElement('div');
-        title.className = 'section-title';
-        title.contentEditable = 'true';
-        title.textContent = entry.title || '';
-        title.addEventListener('input', () => {
-          entry.title = title.textContent;
-          pushHistoryDebounced();
-        });
-        title.addEventListener('blur', () => {
-          entry.title = title.textContent.trim();
-          flushPendingHistory();
-        });
-        title.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') { e.preventDefault(); title.blur(); }
-        });
-
-        const count = document.createElement('span');
-        count.className = 'section-count';
-
-        const pin = document.createElement('button');
-        pin.type = 'button';
-        pin.className = 'section-pin';
-        pin.setAttribute('aria-label', 'Set as paste target');
-        pin.title = 'Paste new screenshots into this section';
-        pin.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14l-1.7-3.4a2 2 0 0 1-.3-1V5a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7.6a2 2 0 0 1-.3 1L5 17z"/></svg>`;
-        pin.addEventListener('click', (e) => { e.stopPropagation(); setPasteTarget(entry.id); });
-        if (entry.id === pasteTargetSectionId) { card.classList.add('paste-target'); pin.classList.add('active'); }
-
-        const move = document.createElement('button');
-        move.type = 'button';
-        move.className = 'section-move';
-        move.title = 'Drag to move this section (with all its cards)';
-        move.setAttribute('aria-label', 'Move section');
-        move.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="5" r="1.7"/><circle cx="15" cy="5" r="1.7"/><circle cx="9" cy="12" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="9" cy="19" r="1.7"/><circle cx="15" cy="19" r="1.7"/></svg>`;
-
-        card.append(seq, toggle, title, count, pin, move, del);
       } else {
         if (entry.text && entry.text.trim()) {
           thumb.innerHTML = entry.text;
@@ -3123,15 +3406,7 @@
 
       card.addEventListener('click', (e) => {
         if (performance.now() < suppressClickUntil) return; // click synthesised right after a drag
-        if (e.target.closest('.card-seq, .card-del, .section-title, .section-move, .section-pin')) return;
-        if (entry.type === 'section') {
-          // Click anywhere on the section bar (except its editable title) collapses/expands it.
-          entry.collapsed = !entry.collapsed;
-          card.classList.toggle('collapsed', entry.collapsed);
-          applyCollapseStates();
-          pushHistory();
-          return;
-        }
+        if (e.target.closest('.card-seq, .card-del')) return;
         openModal(entry.id);
       });
 
@@ -3142,105 +3417,119 @@
     function refreshCard(entry) {
       const card = CARDS.querySelector(`.card[data-id="${entry.id}"]`);
       if (!card) return;
-      const seq = card.querySelector('.card-seq').textContent;
+      // Preserve the existing number badge. Loose cards (top-level / direct-section)
+      // carry no number, so their .card-seq is removed at render — keep it that way.
+      const oldSeq = card.querySelector('.card-seq');
+      const seqText = oldSeq ? oldSeq.textContent : null;
       const newCard = buildCard(entry);
-      newCard.querySelector('.card-seq').textContent = seq;
+      const newSeq = newCard.querySelector('.card-seq');
+      if (newSeq) { if (seqText !== null) newSeq.textContent = seqText; else newSeq.remove(); }
       card.replaceWith(newCard);
     }
 
-    // ── Drag & drop — pointer-based live reorder ──────────────────────────────────
-    // Native HTML5 drag-and-drop proved unreliable here: the wrapping grid, the
-    // contentEditable section titles, and drops landing in empty space (end of a
-    // row / after the last tile) frequently produced no move at all. We instead
-    // drive reordering with pointer events, which fire consistently everywhere and
-    // let us live-move the dragged card into place.
+    // ── Drag & drop — pointer-based live reorder (nested) ─────────────────────────
+    // Pointer events (not native HTML5 DnD) drive reordering: they fire consistently
+    // across the wrapping grid, contentEditable titles, and empty drop zones, and let
+    // us live-move the dragged node. Three kinds of drag: a card (moves between any
+    // card-rows — within/across steps & sections, or to the top-level loose zone), a
+    // step box, or a section box (each a single DOM subtree, moved with one insert).
+    // After every drop, syncOrder() rebuilds items[] from the DOM and renderBoard()
+    // re-renders, so numbering/insertors/collapse always re-derive cleanly.
     const DRAG_THRESHOLD = 5;          // px of travel before a press becomes a drag
-    let dragState = null;              // { id, card, startX, startY, pointerId, active, changed, orderBefore }
+    let dragState = null;              // { kind:'card'|'step'|'section', id, node, startX, startY, pointerId, active, orderBefore }
     let suppressClickUntil = 0;        // perf timestamp; click handlers ignore the post-drag click
 
-    // The card we'd insertBefore for the given pointer position (null = append at end).
-    // Walks cards in DOM (reading) order, which matches the visual top-left→bottom-right
-    // flow, so the trailing space of a row resolves to the start of the next row — i.e.
-    // the end of the current section — and anywhere past the last card appends.
-    function insertionRef(x, y, dragging) {
-      const cards = [...CARDS.querySelectorAll('.card')];
-      for (const card of cards) {
-        if (card === dragging) continue;
-        const r = card.getBoundingClientRect();
-        if (y < r.top) return card;                                 // pointer is above a later row
-        if (y <= r.bottom && x < r.left + r.width / 2) return card; // before this card within its row
-      }
-      return null;                                                  // past everything → append
+    // Card-rows currently visible (not inside a collapsed box).
+    function visibleCardRows() {
+      return [...CARDS.querySelectorAll('.card-row')].filter(r => r.offsetParent !== null);
     }
 
-    // The DOM nodes that make up a section: its header card plus every node that
-    // follows up to (but not including) the next section header — i.e. all of the
-    // section's cards (and any insert buttons). Used to move a section as one block.
-    function sectionBlockNodes(headerCard) {
-      const nodes = [headerCard];
-      let n = headerCard.nextSibling;
-      while (n && !(n.nodeType === 1 && n.classList && n.classList.contains('section-card'))) {
-        nodes.push(n);
-        n = n.nextSibling;
+    // The { row, ref } a dragged card should drop into: the row under the pointer
+    // (else the nearest visible row), then the card to insert before (null = append).
+    function cardDropTarget(x, y, draggingCard) {
+      const rows = visibleCardRows();
+      let target = null, best = Infinity;
+      for (const row of rows) {
+        const r = row.getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom && x >= r.left && x <= r.right) { target = row; break; }
+        const cy = Math.max(r.top, Math.min(y, r.bottom));
+        const cx = Math.max(r.left, Math.min(x, r.right));
+        const d = Math.hypot(x - cx, y - cy);
+        if (d < best) { best = d; target = row; }
       }
-      return nodes;
+      if (!target) return null;
+      const cards = [...target.querySelectorAll(':scope > .card')];
+      for (const c of cards) {
+        if (c === draggingCard) continue;
+        const r = c.getBoundingClientRect();
+        if (y < r.top) return { row: target, ref: c };
+        if (y <= r.bottom && x < r.left + r.width / 2) return { row: target, ref: c };
+      }
+      return { row: target, ref: null };
     }
 
-    // When dragging a whole section, snap only to section boundaries so sections
-    // never interleave: returns the section header to insert the block before, or
-    // null to append the block at the very end.
-    function sectionDropRef(y, draggedHeader) {
-      const headers = [...CARDS.querySelectorAll('.card.section-card')];
-      for (const h of headers) {
-        if (h === draggedHeader) continue;
-        const r = h.getBoundingClientRect();
-        if (y < r.top + r.height / 2) return h;
+    // Top-level block (section/step box) to insert a dragged section before; null = end.
+    function topLevelDropRef(y, draggedBox) {
+      const blocks = [...CARDS.children].filter(b =>
+        b !== draggedBox && (b.classList.contains('section-box') || b.classList.contains('step-box')));
+      for (const b of blocks) {
+        const r = b.getBoundingClientRect();
+        if (y < r.top + r.height / 2) return b;
       }
       return null;
     }
 
+    // Where a dragged step box should land: into the section under the pointer
+    // (positioned among its step boxes), else at the top level.
+    function stepDropTarget(x, y, draggedBox) {
+      const sections = [...CARDS.querySelectorAll('.section-box')].filter(s => s !== draggedBox && s.offsetParent !== null);
+      let host = null;
+      for (const s of sections) {
+        const r = s.getBoundingClientRect();
+        if (y >= r.top && y <= r.bottom) { host = s; break; }
+      }
+      if (host) {
+        const steps = [...host.querySelectorAll(':scope > .step-box')].filter(b => b !== draggedBox);
+        for (const b of steps) {
+          const r = b.getBoundingClientRect();
+          if (y < r.top + r.height / 2) return { parent: host, ref: b };
+        }
+        return { parent: host, ref: null };   // after the last step (and the direct-cards row)
+      }
+      return { parent: CARDS, ref: topLevelDropRef(y, draggedBox) };
+    }
+
     function onDragMove(e) {
       if (!dragState) return;
-      const card = dragState.card;
+      const node = dragState.node;
       if (!dragState.active) {
         if (Math.hypot(e.clientX - dragState.startX, e.clientY - dragState.startY) < DRAG_THRESHOLD) return;
-        // Promote to an active drag.
         dragState.active = true;
         dragState.orderBefore = items.map((it) => it.id).join(',');
-        // Drop focus from any card field (e.g. a section title being edited) so it
-        // doesn't keep a text selection / caret while we move the card.
         const ae = document.activeElement;
-        if (ae && ae.blur && ae.closest && ae.closest('.card')) ae.blur();
+        if (ae && ae.blur && ae.closest && ae.closest('.box-head, .card')) ae.blur();
         CARDS.querySelectorAll('.card-insertor').forEach(el => el.remove());
-        card.classList.add('dragging');
-        if (dragState.isSection) {
-          // Dim the section's member cards so it's clear they travel with the header.
-          for (const n of sectionBlockNodes(card)) {
-            if (n !== card && n.classList && n.classList.contains('card')) n.classList.add('section-block-dragging');
-          }
-        }
+        node.classList.add(dragState.kind === 'card' ? 'dragging' : 'box-dragging');
         document.body.style.userSelect = 'none';
-        try { card.setPointerCapture(dragState.pointerId); } catch (_) {}
+        try { node.setPointerCapture(dragState.pointerId); } catch (_) {}
       }
       e.preventDefault();
 
-      if (dragState.isSection) {
-        const ref = sectionDropRef(e.clientY, card);            // a section header, or null = end
-        const block = sectionBlockNodes(card);
-        const last = block[block.length - 1];
-        // Skip when the block already sits immediately before the target.
-        if (ref !== card && last.nextSibling !== ref) {
-          for (const n of block) CARDS.insertBefore(n, ref);    // ref === null → append, order preserved
-          dragState.changed = true;
+      if (dragState.kind === 'card') {
+        const tgt = cardDropTarget(e.clientX, e.clientY, node);
+        if (tgt) {
+          if (tgt.ref) { if (tgt.ref !== node) tgt.row.insertBefore(node, tgt.ref); }
+          else if (node !== tgt.row.lastElementChild || node.parentNode !== tgt.row) tgt.row.appendChild(node);
         }
-        return;
-      }
-
-      const ref = insertionRef(e.clientX, e.clientY, card);
-      // Only touch the DOM when the position actually changes (avoids jitter).
-      if (ref !== card && ref !== card.nextSibling) {
-        CARDS.insertBefore(card, ref); // ref === null → append
-        dragState.changed = true;
+      } else if (dragState.kind === 'section') {
+        const ref = topLevelDropRef(e.clientY, node);
+        if (ref !== node.nextElementSibling || node.parentNode !== CARDS) CARDS.insertBefore(node, ref);
+      } else { // step
+        const tgt = stepDropTarget(e.clientX, e.clientY, node);
+        if (tgt) {
+          if (tgt.ref) tgt.parent.insertBefore(node, tgt.ref);
+          else if (node !== tgt.parent.lastElementChild || node.parentNode !== tgt.parent) tgt.parent.appendChild(node);
+        }
       }
     }
 
@@ -3250,38 +3539,44 @@
       window.removeEventListener('pointercancel', onDragEnd);
       const st = dragState;
       dragState = null;
-      if (!st || !st.active) return; // a plain click: leave it to the card's click handler
-      st.card.classList.remove('dragging');
-      CARDS.querySelectorAll('.section-block-dragging').forEach((c) => c.classList.remove('section-block-dragging'));
+      if (!st || !st.active) return; // a plain click: leave it to the node's click handler
       document.body.style.userSelect = '';
-      try { st.card.releasePointerCapture(st.pointerId); } catch (_) {}
+      try { st.node.releasePointerCapture(st.pointerId); } catch (_) {}
       syncOrder();
-      reindex();
-      syncInsertors();
-      if (st.orderBefore !== items.map((it) => it.id).join(',')) pushHistory();
+      const changed = st.orderBefore !== items.map((it) => it.id).join(',');
+      renderBoard();
+      updateUI();
+      if (changed) pushHistory();
       // A click is synthesised after pointerup; swallow it so we don't open the modal.
       suppressClickUntil = performance.now() + 300;
     }
 
+    function startDrag(kind, id, node, e) {
+      if (e.button !== 0 || dragState) return;
+      dragState = {
+        kind, id, node,
+        startX: e.clientX, startY: e.clientY,
+        pointerId: e.pointerId, active: false, orderBefore: '',
+      };
+      window.addEventListener('pointermove', onDragMove);
+      window.addEventListener('pointerup', onDragEnd);
+      window.addEventListener('pointercancel', onDragEnd);
+    }
+
     function attachDrag(card) {
       card.addEventListener('pointerdown', (e) => {
-        if (e.button !== 0 || dragState) return;                       // left button only
-        if (e.target.closest('.card-del, .card-select-chk, .section-toggle')) return; // controls handle their own clicks
-        // The section title is an editable text field — never start a drag from it,
-        // so clicking/selecting always works.
-        if (e.target.closest('.section-title')) return;
-        // A section is moved (with all its cards) only via its move handle; pressing
-        // elsewhere on the bar is reserved for collapse/expand.
-        const isSection = card.classList.contains('section-card');
-        if (isSection && !e.target.closest('.section-move')) return;
-        dragState = {
-          id: card.dataset.id, card, isSection,
-          startX: e.clientX, startY: e.clientY,
-          pointerId: e.pointerId, active: false, changed: false, orderBefore: '',
-        };
-        window.addEventListener('pointermove', onDragMove);
-        window.addEventListener('pointerup', onDragEnd);
-        window.addEventListener('pointercancel', onDragEnd);
+        if (e.target.closest('.card-del, .card-select-chk')) return; // controls handle their own clicks
+        startDrag('card', card.dataset.id, card, e);
+      });
+    }
+
+    // Section/step boxes drag only from their move handle (the rest of the head bar is
+    // reserved for collapse/title editing).
+    function attachBoxDrag(handle, id, kind) {
+      handle.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        const box = handle.closest('.section-box, .step-box');
+        if (box) startDrag(kind, id, box, e);
       });
     }
 
@@ -3323,19 +3618,13 @@
     // ── Modal ─────────────────────────────────────────────────────────────────────
     function openModal(id, autoFocus = true) {
       const entry = items.find((s) => s.id === id);
-      if (!entry || entry.type === 'section') return;
+      if (!entry || entry.type === 'section' || entry.type === 'step') return;
       MODAL._innerUndo = null;
       MODAL._innerRedo = null;
       openItemId = id;
 
-      // Position within the entry's own section (numbering restarts at each section).
-      let idx = 0;
-      for (const it of items) {
-        if (it.type === 'section') { idx = 0; continue; }
-        idx++;
-        if (it === entry) break;
-      }
-      MODAL_SEQ.textContent = String(idx).padStart(2, '0');
+      // Hierarchical position (e.g. 1.2.3), shared with the board badges and exports.
+      MODAL_SEQ.textContent = computeNumbering().get(id) || '';
       MODAL_KIND.textContent = entry.type === 'text' ? 'Text card' : entry.type === 'file' ? fileTypeLabel(entry.fileType || '', entry.name) + ' file' : 'Screenshot';
       MODAL_BODY.innerHTML = '';
       MODAL_BODY.classList.remove('split');
@@ -3905,10 +4194,10 @@
       if (!openItemId) return;
       const i = items.findIndex((s) => s.id === openItemId);
       if (i === -1) return;
-      // Skip over section dividers so navigation crosses from one section into the
-      // next (the modal only opens image/text/file cards, never section headers).
+      // Skip over section/step dividers so navigation crosses between them (the modal
+      // only ever opens image/text/file cards, never divider heads).
       let next = i + delta;
-      while (next >= 0 && next < items.length && items[next].type === 'section') next += delta;
+      while (next >= 0 && next < items.length && !isCardType(items[next].type)) next += delta;
       if (next < 0 || next >= items.length) return;
       if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
       openModal(items[next].id, false);
@@ -3918,8 +4207,8 @@
       const i = items.findIndex((s) => s.id === openItemId);
       // Enabled when any non-section card exists before / after the current one,
       // regardless of section boundaries in between.
-      const hasBefore = i > 0 && items.slice(0, i).some((it) => it.type !== 'section');
-      const hasAfter = i !== -1 && items.slice(i + 1).some((it) => it.type !== 'section');
+      const hasBefore = i > 0 && items.slice(0, i).some((it) => isCardType(it.type));
+      const hasAfter = i !== -1 && items.slice(i + 1).some((it) => isCardType(it.type));
       MODAL_PREV.disabled = i === -1 || !hasBefore;
       MODAL_NEXT.disabled = i === -1 || !hasAfter;
     }
@@ -3963,32 +4252,71 @@
       if (i !== -1) items.splice(i, 1);
       selectedIds.delete(id);
       updateSelectionBar();
-      CARDS.querySelector(`.card[data-id="${id}"]`)?.remove();
-      // Also remove the orphaned insertor that was after this card
-      reindex();
-      syncInsertors();
+      renderBoard();
       updateUI();
       pushHistory();
     }
 
-    function reindex() {
-      let n = 0;
-      CARDS.querySelectorAll('.card').forEach((c) => {
-        if (c.classList.contains('section-card')) { n = 0; return; } // each section restarts numbering at 1
-        n++;
-        const seqEl = c.querySelector('.card-seq');
-        if (seqEl) seqEl.textContent = String(n).padStart(2, '0');
-      });
+    // Hard-delete a section/step divider together with everything it contains. A
+    // section takes its direct cards, all its steps and their cards (up to the next
+    // section); a step takes its cards (up to the next step or section). Soft delete
+    // (removeItem) drops just the divider and lets its cards merge upward.
+    function removeContainer(id) {
+      const idx = items.findIndex((s) => s.id === id);
+      if (idx === -1) return;
+      const isSection = items[idx].type === 'section';
+      let end = idx + 1;
+      for (; end < items.length; end++) {
+        const t = items[end].type;
+        if (t === 'section') break;
+        if (!isSection && t === 'step') break;
+      }
+      const removed = items.slice(idx, end);
+      const cardCount = removed.filter((it) => isCardType(it.type)).length;
+      const what = isSection ? 'section' : 'step';
+      if (cardCount && !confirm(`Delete this ${what} and the ${cardCount} card${cardCount === 1 ? '' : 's'} inside it? You can undo this.`)) return;
+      for (const it of removed) selectedIds.delete(it.id);
+      if (pasteTargetId && removed.some((it) => it.id === pasteTargetId)) pasteTargetId = null;
+      items.splice(idx, end - idx);
+      updateSelectionBar();
+      renderBoard();
+      updateUI();
+      pushHistory();
     }
 
+    // Rebuild items[] from the nested DOM after a drag. Depth-first, document order:
+    // each section/step head id, then its cards, then nested step boxes' cards — so
+    // the flat order round-trips exactly through renderBoard(). Collapsed boxes keep
+    // their children in the DOM (display:none), so nothing is dropped here.
     function syncOrder() {
-      const order = [...CARDS.querySelectorAll('.card')].map((c) => c.dataset.id);
-      items.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+      const order = [];
+      const pushRow = (row) => { if (row) row.querySelectorAll(':scope > .card').forEach((c) => order.push(c.dataset.id)); };
+      for (const block of CARDS.children) {
+        if (block.classList.contains('section-box')) {
+          order.push(block.dataset.id);
+          pushRow(block.querySelector(':scope > .card-row.section-direct'));
+          block.querySelectorAll(':scope > .step-box').forEach((step) => {
+            order.push(step.dataset.id);
+            pushRow(step.querySelector(':scope > .card-row'));
+          });
+        } else if (block.classList.contains('step-box')) {
+          order.push(block.dataset.id);
+          pushRow(block.querySelector(':scope > .card-row'));
+        } else if (block.classList.contains('card-row')) { // top-level loose zone
+          pushRow(block);
+        }
+      }
+      if (order.length !== items.length) {
+        console.warn('syncOrder: DOM/items mismatch', order.length, 'vs', items.length);
+      }
+      const pos = new Map(order.map((id, i) => [id, i]));
+      items.sort((a, b) => (pos.has(a.id) ? pos.get(a.id) : 1e9) - (pos.has(b.id) ? pos.get(b.id) : 1e9));
     }
 
     function updateUI() {
       const n = items.length;
       const has = n > 0;
+      const cardCount = items.filter((it) => isCardType(it.type)).length;
 
       BTN_PDF.disabled = !has;
       BTN_DOCX.disabled = !has;
@@ -3999,17 +4327,15 @@
       PASTE_STRIP.classList.toggle('hidden', !has);
       if (COUNT_BADGE) { // optional — the badge markup may be commented out
         COUNT_BADGE.classList.toggle('hidden', !has);
-        COUNT_BADGE.textContent = `${n} item${n !== 1 ? 's' : ''}`;
+        COUNT_BADGE.textContent = `${cardCount} item${cardCount !== 1 ? 's' : ''}`;
       }
-
-      if (has) { reindex(); syncInsertors(); }
     }
 
     function clearAll() {
       clearSelection();
-      pasteTargetSectionId = null;
+      pasteTargetId = null;
       items.length = 0;
-      CARDS.innerHTML = '';
+      renderBoard();
       updateUI();
       updatePasteStripTarget();
       pushHistory();
@@ -4025,7 +4351,7 @@
       });
       return {
         format: 'pasteboard',
-        version: 1,
+        version: 2,   // v2 adds the 'step' divider type (Section → Step → Card nesting)
         savedAt: new Date().toISOString(),
         items: cleanItems,
       };
@@ -4071,11 +4397,10 @@
 
     function loadProject(saved) {
       clearSelection();
-      pasteTargetSectionId = null;
+      pasteTargetId = null;
       items.length = 0;
-      CARDS.innerHTML = '';
       for (const raw of saved) {
-        if (!raw || (raw.type !== 'image' && raw.type !== 'text' && raw.type !== 'file' && raw.type !== 'section')) continue;
+        if (!raw || (raw.type !== 'image' && raw.type !== 'text' && raw.type !== 'file' && raw.type !== 'section' && raw.type !== 'step')) continue;
         let entry;
         if (raw.type === 'image') {
           entry = {
@@ -4089,16 +4414,16 @@
             id: raw.id || crypto.randomUUID(), type: 'file',
             name: raw.name || 'file', fileType: raw.fileType || '', size: raw.size || 0, dataURL: raw.dataURL || ''
           };
-        } else if (raw.type === 'section') {
-          entry = { id: raw.id || crypto.randomUUID(), type: 'section', title: raw.title || '', collapsed: !!raw.collapsed };
+        } else if (raw.type === 'section' || raw.type === 'step') {
+          // v1 files have no 'step' entries; their sections load unchanged with their
+          // cards as direct section children — no steps synthesised.
+          entry = { id: raw.id || crypto.randomUUID(), type: raw.type, title: raw.title || '', collapsed: !!raw.collapsed };
         } else {
           entry = { id: raw.id || crypto.randomUUID(), type: 'text', text: raw.text || '' };
         }
         items.push(entry);
-        CARDS.appendChild(buildCard(entry));
       }
-      reindex();
-      syncInsertors();
+      renderBoard();
       updateUI();
     }
 
@@ -4118,108 +4443,122 @@
       await renderPreviewBody();
     }
 
-    // Build (or rebuild) the preview list. Re-run after a delete or a
-    // section collapse/expand so the modal reflects the current items[].
+    // Count the cards (image/text/file) belonging to a section/step marker at `idx`.
+    function containerCardCount(idx) {
+      const isSection = items[idx].type === 'section';
+      let c = 0;
+      for (let j = idx + 1; j < items.length; j++) {
+        const t = items[j].type;
+        if (t === 'section') break;
+        if (!isSection && t === 'step') break;
+        if (isCardType(t)) c++;
+      }
+      return c;
+    }
+
+    // Build (or rebuild) the preview list with nested section → step → card grouping
+    // and hierarchical numbers (1 / 1.1 / 1.1.1). Re-run after a delete or a
+    // collapse/expand so the modal reflects the current items[].
     async function renderPreviewBody() {
+      const cardCount = items.filter((it) => isCardType(it.type)).length;
       PREVIEW_SUB.textContent = _previewKind === 'pdf'
-        ? `Review your pasteboard before exporting to PDF (${items.length} item${items.length === 1 ? '' : 's'}).`
-        : `Review your pasteboard before exporting to Word (${items.length} item${items.length === 1 ? '' : 's'}).`;
+        ? `Review your pasteboard before exporting to PDF (${cardCount} item${cardCount === 1 ? '' : 's'}).`
+        : `Review your pasteboard before exporting to Word (${cardCount} item${cardCount === 1 ? '' : 's'}).`;
       PREVIEW_BODY.innerHTML = '<div class="preview-loading">Building preview…</div>';
 
+      const numById = computeNumbering();
       const frag = document.createDocumentFragment();
-      let previewStepNum = 0;
-      let collapsed = false;
+      let secCollapsed = false, stepCollapsed = false, inStep = false, inSection = false;
       for (let i = 0; i < items.length; i++) {
         const entry = items[i];
 
         if (entry.type === 'section') {
-          previewStepNum = 0; // each section restarts numbering at 1
-          collapsed = !!entry.collapsed;
-          // Count the cards that belong to this section (up to the next header)
-          // for the "N items" badge shown while collapsed.
-          let count = 0;
-          for (let j = i + 1; j < items.length && items[j].type !== 'section'; j++) count++;
-          frag.appendChild(buildPreviewSection(entry, count));
+          secCollapsed = !!entry.collapsed; stepCollapsed = false; inStep = false; inSection = true;
+          frag.appendChild(buildPreviewSection(entry, numById.get(entry.id), containerCardCount(i)));
+          continue;
+        }
+        if (entry.type === 'step') {
+          stepCollapsed = !!entry.collapsed; inStep = true;
+          if (secCollapsed) continue; // hidden under a collapsed section
+          frag.appendChild(buildPreviewStep(entry, numById.get(entry.id), containerCardCount(i)));
           continue;
         }
 
-        // Cards under a collapsed section are hidden in the preview (they are
+        // Cards under a collapsed section/step are hidden in the preview (they are
         // still exported — collapse is purely an organisational view toggle).
-        if (collapsed) continue;
+        if (secCollapsed || stepCollapsed) continue;
 
-        previewStepNum++;
-        const seq = String(previewStepNum).padStart(2, '0');
-        const card = document.createElement('div');
-        card.className = 'preview-item';
-        card.dataset.id = entry.id;
-        card.title = 'Click to edit this step';
-        card.addEventListener('click', () => editFromPreview(entry.id));
-        const label = document.createElement('div');
-        label.className = 'preview-label';
-        label.textContent = 'Step ' + seq + ' · click to edit';
-        card.appendChild(label);
-
-        const del = document.createElement('button');
-        del.type = 'button';
-        del.className = 'pv-del';
-        del.title = 'Delete this step';
-        del.setAttribute('aria-label', 'Delete');
-        del.textContent = '×'; // × multiplication sign
-        del.addEventListener('click', (e) => {
-          e.stopPropagation();
-          deleteFromPreview(entry.id);
-        });
-        card.appendChild(del);
-
-        if (entry.type === 'image') {
-          const img = document.createElement('img');
-          const src = (entry.annotations || []).length
-            ? await composeImage(entry)
-            : entry.dataURL;
-          img.src = src;
-          img.alt = '';
-          card.appendChild(img);
-
-          const cap = document.createElement('div');
-          const txt = htmlToText(entry.caption);
-          cap.className = 'preview-caption' + (txt ? '' : ' empty');
-          if (txt) cap.innerHTML = entry.caption;
-          card.appendChild(cap);
-        } else if (entry.type === 'file') {
-          const cls = fileTypeClass(entry.fileType || '', entry.name);
-          const fb = document.createElement('div');
-          fb.className = 'preview-text';
-          const badge = document.createElement('span');
-          badge.className = 'file-type-badge' + (cls ? ' ' + cls : '');
-          badge.style.display = 'inline-block';
-          badge.style.marginBottom = '6px';
-          badge.textContent = fileTypeLabel(entry.fileType || '', entry.name);
-          const fn = document.createElement('div');
-          fn.style.fontSize = '12px';
-          fn.style.marginTop = '4px';
-          fn.textContent = entry.name;
-          fb.append(badge, fn);
-          card.appendChild(fb);
-        } else {
-          const t = document.createElement('div');
-          const txt = htmlToText(entry.text);
-          t.className = 'preview-text' + (txt ? '' : ' empty');
-          if (txt) t.innerHTML = entry.text;
-          else t.textContent = '(empty text card)';
-          card.appendChild(t);
-        }
+        const card = await buildPreviewItem(entry, numById.get(entry.id), inStep ? 2 : inSection ? 1 : 0);
         frag.appendChild(card);
       }
       PREVIEW_BODY.innerHTML = '';
       PREVIEW_BODY.appendChild(frag);
     }
 
-    // A clickable section header in the preview — toggles its collapsed state
+    async function buildPreviewItem(entry, num, indent) {
+      const card = document.createElement('div');
+      card.className = 'preview-item' + (indent ? ' pv-indent-' + indent : '');
+      card.dataset.id = entry.id;
+      card.title = 'Click to edit this step';
+      card.addEventListener('click', () => editFromPreview(entry.id));
+      const label = document.createElement('div');
+      label.className = 'preview-label';
+      label.textContent = (num ? num + ' · ' : '') + 'click to edit';
+      card.appendChild(label);
+
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'pv-del';
+      del.title = 'Delete this step';
+      del.setAttribute('aria-label', 'Delete');
+      del.textContent = '×';
+      del.addEventListener('click', (e) => { e.stopPropagation(); deleteFromPreview(entry.id); });
+      card.appendChild(del);
+
+      if (entry.type === 'image') {
+        const img = document.createElement('img');
+        img.src = (entry.annotations || []).length ? await composeImage(entry) : entry.dataURL;
+        img.alt = '';
+        card.appendChild(img);
+        const cap = document.createElement('div');
+        const txt = htmlToText(entry.caption);
+        cap.className = 'preview-caption' + (txt ? '' : ' empty');
+        if (txt) cap.innerHTML = entry.caption;
+        card.appendChild(cap);
+      } else if (entry.type === 'file') {
+        const cls = fileTypeClass(entry.fileType || '', entry.name);
+        const fb = document.createElement('div');
+        fb.className = 'preview-text';
+        const badge = document.createElement('span');
+        badge.className = 'file-type-badge' + (cls ? ' ' + cls : '');
+        badge.style.display = 'inline-block';
+        badge.style.marginBottom = '6px';
+        badge.textContent = fileTypeLabel(entry.fileType || '', entry.name);
+        const fn = document.createElement('div');
+        fn.style.fontSize = '12px';
+        fn.style.marginTop = '4px';
+        fn.textContent = entry.name;
+        fb.append(badge, fn);
+        card.appendChild(fb);
+      } else {
+        const t = document.createElement('div');
+        const txt = htmlToText(entry.text);
+        t.className = 'preview-text' + (txt ? '' : ' empty');
+        if (txt) t.innerHTML = entry.text;
+        else t.textContent = '(empty text card)';
+        card.appendChild(t);
+      }
+      return card;
+    }
+
+    // A clickable section/step header in the preview — toggles its collapsed state
     // (kept in sync with the board) and shows a count badge.
-    function buildPreviewSection(entry, count) {
+    function buildPreviewSection(entry, num, count) { return buildPreviewDivider(entry, num, count, 'section'); }
+    function buildPreviewStep(entry, num, count) { return buildPreviewDivider(entry, num, count, 'step'); }
+    function buildPreviewDivider(entry, num, count, kind) {
       const collapsed = !!entry.collapsed;
       const sec = document.createElement('div');
-      sec.className = 'preview-section' + (collapsed ? ' collapsed' : '');
+      sec.className = 'preview-section' + (kind === 'step' ? ' preview-step' : '') + (collapsed ? ' collapsed' : '');
       sec.dataset.id = entry.id;
       sec.title = collapsed ? 'Click to expand' : 'Click to collapse';
 
@@ -4227,21 +4566,25 @@
       chev.className = 'pv-chevron';
       chev.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>`;
 
+      const numEl = document.createElement('span');
+      numEl.className = 'pv-sec-num';
+      numEl.textContent = num;
+
       const title = document.createElement('span');
       title.className = 'pv-sec-title';
-      title.textContent = entry.title || 'Section';
+      title.textContent = entry.title || (kind === 'step' ? 'Step' : 'Section');
 
       const cnt = document.createElement('span');
       cnt.className = 'pv-sec-count';
       cnt.textContent = `${count} item${count === 1 ? '' : 's'}`;
 
-      sec.append(chev, title, cnt);
+      sec.append(chev, numEl, title, cnt);
       sec.addEventListener('click', () => {
         entry.collapsed = !entry.collapsed;
-        // Mirror the change onto the board card so both views agree.
-        const boardCard = CARDS.querySelector(`.card.section-card[data-id="${entry.id}"]`);
-        if (boardCard) boardCard.classList.toggle('collapsed', entry.collapsed);
-        applyCollapseStates();
+        // Mirror the change onto the board box so both views agree.
+        const box = CARDS.querySelector(`.section-box[data-id="${entry.id}"], .step-box[data-id="${entry.id}"]`);
+        if (box) box.classList.toggle('collapsed', entry.collapsed);
+        refreshSectionToggle();
         pushHistory();
         renderPreviewBody();
       });
@@ -4264,18 +4607,25 @@
     function confirmExportPreview() {
       const kind = _previewKind;
       closeExportPreview();
-      if (kind === 'pdf') openPdfMeta();
-      else if (kind === 'docx') exportAsDOCX();
+      openPdfMeta(kind);   // both PDF and Word collect filename/author/JSON first
     }
 
-    // ── PDF details modal (filename / author / include-JSON) ──────────────────────
+    // ── Export details modal (filename / author / include-JSON) — shared by PDF & Word ──
     const PDF_META_MODAL = document.getElementById('pdf-meta-modal');
     const PDF_META_NAME = document.getElementById('pdf-meta-name');
     const PDF_META_AUTHOR = document.getElementById('pdf-meta-author');
     const PDF_META_JSON = document.getElementById('pdf-meta-json');
     let _lastAuthor = '';
+    let _metaKind = 'pdf';
 
-    function openPdfMeta() {
+    function openPdfMeta(kind = 'pdf') {
+      _metaKind = kind;
+      const isPdf = kind === 'pdf';
+      document.getElementById('pdf-meta-title').textContent = isPdf ? 'Export to PDF' : 'Export to Word';
+      document.querySelector('.pdf-meta-sub').textContent = isPdf
+        ? "These details appear on the PDF's cover page."
+        : "These details appear on the document's cover page.";
+      document.getElementById('pdf-meta-confirm').textContent = isPdf ? 'Export PDF' : 'Export Word';
       PDF_META_NAME.value = 'pasteboard';
       PDF_META_AUTHOR.value = _lastAuthor;
       PDF_META_JSON.checked = true;
@@ -4295,13 +4645,15 @@
     }
 
     function confirmPdfMeta() {
-      let base = (PDF_META_NAME.value || '').trim().replace(/\.pdf$/i, '');
+      const ext = _metaKind === 'pdf' ? 'pdf' : 'docx';
+      let base = (PDF_META_NAME.value || '').trim().replace(new RegExp('\\.' + ext + '$', 'i'), '');
       if (!base) base = 'pasteboard';
       const author = (PDF_META_AUTHOR.value || '').trim();
       _lastAuthor = author;
       const includeJson = PDF_META_JSON.checked;
       closePdfMeta();
-      exportAsPDF({ baseName: base, author, includeJson });
+      if (_metaKind === 'pdf') exportAsPDF({ baseName: base, author, includeJson });
+      else exportAsDOCX({ baseName: base, author, includeJson });
     }
 
     function _previewKeyHandler(e) {
@@ -4401,58 +4753,72 @@
         };
         metaLine('Author', author || '—');
         metaLine('Created', createdAt.toLocaleString());
-        metaLine('Items', String(items.filter((it) => it.type !== 'section').length));
+        metaLine('Items', String(items.filter((it) => isCardType(it.type)).length));
         if (includeJson) {
           cy += 12;
           doc.setFont('helvetica', 'italic'); doc.setFontSize(10); doc.setTextColor(107, 114, 128);
           const note = doc.splitTextToSize('An editable project file (' + base + '-raw.json) is saved alongside this PDF — open it in Pasteboard to keep editing.', contentW);
           doc.text(note, margin, cy);
         }
-        doc.addPage();
+        // Reserve a Contents (index) page right after the cover when there are
+        // sections/steps; it's filled in after the content pages are laid out so we
+        // know each section/step's real page number.
+        const hasDividers = items.some((it) => it.type === 'section' || it.type === 'step');
+        let indexPageNum = 0;
+        if (hasDividers) { doc.addPage(); indexPageNum = doc.internal.getNumberOfPages(); }
+        doc.addPage();                       // content begins here
 
         let y = margin;
+        const toc = [];                      // { num, title, isStep, page } recorded during layout
 
         const ensureSpace = (h) => {
           if (y + h > pageH - margin) { doc.addPage(); y = margin; }
         };
 
-        let pdfStepNum = 0;
+        const numById = computeNumbering();
+        let cardIndent = 0;   // left indent for card content under the current section/step
         for (let i = 0; i < items.length; i++) {
           const entry = items[i];
-          // const label = (entry.type === 'image' ? 'Step ' : 'Note ') + seq;
 
-          if (entry.type === 'section') {
-            pdfStepNum = 0; // each section restarts numbering at 1
-            const secTitle = entry.title || 'Section';
+          if (entry.type === 'section' || entry.type === 'step') {
+            const isStep = entry.type === 'step';
+            cardIndent = isStep ? 36 : 16;              // step cards indent past the step band
+            const num = numById.get(entry.id) || '';
+            const indent = isStep ? 20 : 0;             // steps sit indented under their section
+            const bandX = margin + indent;
+            const bandW = contentW - indent;
+            const heading = num + '  ' + (entry.title || (isStep ? 'Step' : 'Section'));
             doc.setFont('helvetica', 'bold');
-            doc.setFontSize(14);
-            const titleLines = doc.splitTextToSize(secTitle, contentW - 24);
-            const padV = 9, lineH = 17;
-            const bandH = padV * 2 + 14 + (titleLines.length - 1) * lineH;
-            if (y > margin) y += 12;
-            ensureSpace(bandH + 14);
-            // light-indigo background band with a thin border + indigo left accent bar
-            doc.setFillColor(238, 242, 255);   // #EEF2FF
-            doc.setDrawColor(199, 210, 254);    // #C7D2FE
+            doc.setFontSize(isStep ? 12 : 14);
+            const titleLines = doc.splitTextToSize(heading, bandW - 24);
+            const padV = isStep ? 7 : 9, lineH = isStep ? 15 : 17;
+            const bandH = padV * 2 + (isStep ? 12 : 14) + (titleLines.length - 1) * lineH;
+            if (y > margin) y += isStep ? 8 : 12;
+            ensureSpace(bandH + 12);
+            toc.push({ num, title: entry.title || (isStep ? 'Step' : 'Section'), isStep, page: doc.internal.getNumberOfPages() });
+            // section: light-indigo band; step: lighter band, both with a left accent bar
+            doc.setFillColor(isStep ? 250 : 238, isStep ? 250 : 242, 255);
+            doc.setDrawColor(isStep ? 221 : 199, isStep ? 214 : 210, 254);
             doc.setLineWidth(0.5);
-            doc.roundedRect(margin, y, contentW, bandH, 3, 3, 'FD');
-            doc.setFillColor(79, 70, 229);      // #4F46E5 accent bar
-            doc.rect(margin, y, 4, bandH, 'F');
-            doc.setTextColor(67, 56, 202);      // #4338CA title
-            doc.text(titleLines, margin + 16, y + padV + 11);
-            y += bandH + 14;
+            doc.roundedRect(bandX, y, bandW, bandH, 3, 3, 'FD');
+            doc.setFillColor(isStep ? 165 : 79, isStep ? 180 : 70, isStep ? 252 : 229);
+            doc.rect(bandX, y, 4, bandH, 'F');
+            doc.setTextColor(isStep ? 91 : 67, isStep ? 33 : 56, isStep ? 182 : 202);
+            doc.text(titleLines, bandX + 16, y + padV + (isStep ? 9 : 11));
+            y += bandH + (isStep ? 10 : 14);
             continue;
           }
 
-          pdfStepNum++;
-          const label = 'Step ' + String(pdfStepNum).padStart(2, '0');
+          const label = numById.get(entry.id) || '';
 
-          ensureSpace(28);
-          doc.setFont('helvetica', 'bold');
-          doc.setFontSize(11);
-          doc.setTextColor(79, 70, 229);
-          doc.text(label, margin, y + 12);
-          y += 22;
+          if (label) {                         // loose cards have no number → no label line
+            ensureSpace(28);
+            doc.setFont('helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(79, 70, 229);
+            doc.text(label, margin + cardIndent, y + 12);
+            y += 22;
+          }
 
           if (entry.type === 'image') {
             const imgEl = await loadImg(entry.dataURL);
@@ -4485,6 +4851,8 @@
             const fsize = formatFileSize(entry.size);
 
             ensureSpace(52);
+            const fx = margin + cardIndent;
+            const fw = contentW - cardIndent;
             // Colored badge-like label
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(9);
@@ -4493,63 +4861,99 @@
             const badgeColor = { 'PDF': [220,38,38], 'Word': [37,99,235], 'Excel': [22,163,74], 'PowerPoint': [234,88,12], 'Outlook': [2,132,199] };
             const [br, bg, bb] = badgeColor[ftLabel] || [79,70,229];
             doc.setFillColor(br, bg, bb);
-            doc.roundedRect(margin, y, badgeW, 14, 2, 2, 'F');
-            doc.text(ftLabel, margin + 5, y + 10);
+            doc.roundedRect(fx, y, badgeW, 14, 2, 2, 'F');
+            doc.text(ftLabel, fx + 5, y + 10);
             y += 18;
 
             doc.setFont('helvetica', 'bold');
             doc.setFontSize(11);
             doc.setTextColor(17, 24, 39);
-            const nameLines = doc.splitTextToSize(fname, contentW);
-            doc.text(nameLines, margin, y + 11);
+            const nameLines = doc.splitTextToSize(fname, fw);
+            doc.text(nameLines, fx, y + 11);
             y += nameLines.length * 14;
 
             if (fsize) {
               doc.setFont('helvetica', 'normal');
               doc.setFontSize(9.5);
               doc.setTextColor(107, 114, 128);
-              doc.text(fsize, margin, y + 10);
+              doc.text(fsize, fx, y + 10);
               y += 16;
             }
             // Reference to the bundled file.
             doc.setFont('helvetica', 'italic');
             doc.setFontSize(9);
             doc.setTextColor(107, 114, 128);
-            doc.text('See attachments/' + fname + ' in this .zip bundle.', margin, y + 10);
+            doc.text('See attachments/' + fname + ' in this .zip bundle.', fx, y + 10);
             y += 20;
           } else {
+            const tx = margin + cardIndent;
+            const tw = contentW - cardIndent;
             const isEmpty = !htmlToText(entry.text);
             if (isEmpty) {
               doc.setFont('helvetica', 'italic');
               doc.setFontSize(11);
               doc.setTextColor(156, 163, 175);
-              const lines = doc.splitTextToSize('(empty text card)', contentW);
+              const lines = doc.splitTextToSize('(empty text card)', tw);
               const blockH = lines.length * 14;
               ensureSpace(blockH + 18);
-              doc.text(lines, margin, y + 12);
+              doc.text(lines, tx, y + 12);
               y += blockH + 18;
             } else {
               const txt = htmlToText(entry.text);
               doc.setFont('helvetica', 'normal');
               doc.setFontSize(11);
 
-              const nLines = pdfRichText(doc, txt, margin, 0, contentW, 14, [17, 24, 39], 12, true);
+              const nLines = pdfRichText(doc, txt, tx, 0, tw, 14, [17, 24, 39], 12, true);
               const blockH = nLines * 14;
               ensureSpace(blockH + 18);
-              pdfRichText(doc, txt, margin, y, contentW, 14, [17, 24, 39], 12, false);
+              pdfRichText(doc, txt, tx, y, tw, 14, [17, 24, 39], 12, false);
               y += blockH + 18;
             }
           }
         }
 
-        // Inserted files travel alongside the PDF in a .zip bundle (see exportBundle).
-        await exportBundle(name, doc.output('blob'));
-        // Also save the editable project as a separate JSON named "<file>-raw.json",
-        // so the same export can be re-opened and edited later.
-        if (includeJson) {
-          const jsonBlob = new Blob([JSON.stringify(buildProjectPayload())], { type: 'application/json' });
-          download(jsonBlob, base + '-raw.json');
+        // ── Fill the reserved Contents (index) page ──
+        if (hasDividers && indexPageNum && toc.length) {
+          doc.setPage(indexPageNum);
+          let iy = margin + 8;
+          doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(17, 24, 39);
+          doc.text('Contents', margin, iy);
+          iy += 12;
+          doc.setDrawColor(229, 231, 235); doc.setLineWidth(1);
+          doc.line(margin, iy, margin + contentW, iy);
+          iy += 26;
+          for (const e of toc) {
+            if (iy > pageH - margin) break;               // best-effort single index page
+            const indent = e.isStep ? 22 : 0;
+            doc.setFont('helvetica', e.isStep ? 'normal' : 'bold');
+            doc.setFontSize(e.isStep ? 11 : 13);
+            if (e.isStep) doc.setTextColor(91, 33, 182); else doc.setTextColor(67, 56, 202);
+            const left = e.num + '   ' + e.title;
+            const leftLines = doc.splitTextToSize(left, contentW - indent - 36);
+            doc.text(leftLines, margin + indent, iy);
+            doc.setFont('helvetica', 'normal'); doc.setTextColor(107, 114, 128);
+            doc.text(String(e.page), margin + contentW, iy, { align: 'right' });
+            iy += leftLines.length * (e.isStep ? 15 : 17) + (e.isStep ? 3 : 6);
+          }
         }
+
+        // ── Page-number footers (skip the cover) — matches the Contents page refs ──
+        const totalPages = doc.internal.getNumberOfPages();
+        for (let p = 2; p <= totalPages; p++) {
+          doc.setPage(p);
+          doc.setFont('helvetica', 'normal');
+          doc.setFontSize(9);
+          doc.setTextColor(156, 163, 175);
+          doc.text(`${p} / ${totalPages}`, pageW / 2, pageH - 18, { align: 'center' });
+        }
+
+        // Bundle the editable project JSON (and any inserted files) alongside the PDF
+        // in a single .zip — passed as an "extra" so it isn't a separate download.
+        const extras = [];
+        if (includeJson) {
+          extras.push({ name: base + '-raw.json', data: JSON.stringify(buildProjectPayload()) });
+        }
+        await exportBundle(name, doc.output('blob'), extras);
       } catch (err) {
         toast('PDF export failed: ' + err.message);
         console.error(err);
@@ -4576,14 +4980,16 @@
     }
 
     // ── DOCX Export ───────────────────────────────────────────────────────────────
-    async function exportAsDOCX() {
+    async function exportAsDOCX(opts = {}) {
       if (!items.length) return;
       if (typeof JSZip === 'undefined') {
         toast('JSZip library not loaded — check your internet connection.');
         return;
       }
-      const name = askFilename('Save Word document as:', `pasteboard-${Date.now()}`, 'docx');
-      if (!name) return;
+      const base = (opts.baseName || `pasteboard-${Date.now()}`).replace(/[\\/:*?"<>|]+/g, '_');
+      const name = base + '.docx';
+      const author = (opts.author || '').trim();
+      const includeJson = !!opts.includeJson;
 
       showOverlay('Generating Word document…');
       try {
@@ -4602,23 +5008,37 @@
           zip.file(`word/media/${filename}`, dataURLtoBytes(pngURL), { binary: true });
         }
 
+        // Cover + Contents metadata mirrors the PDF export.
+        const meta = {
+          base, author,
+          createdAt: new Date(),
+          includeJson,
+          hasDividers: items.some((it) => it.type === 'section' || it.type === 'step'),
+        };
+
         // Inserted files are NOT embedded as OLE objects (Edge/Chrome + managed Office
         // can't open those). They travel alongside the .docx in a .zip bundle instead;
         // the document body still shows each file as a labelled badge reference.
         // Build the document body first so it can register external hyperlink
         // relationships, then emit the rels part that references them.
         const hyperlinks = [];
-        const docXml = xmlDocument(rels, hyperlinks);
+        const docXml = xmlDocument(rels, hyperlinks, meta);
         zip.file('[Content_Types].xml', xmlContentTypes());
         zip.file('_rels/.rels', xmlRootRels());
         zip.file('word/_rels/document.xml.rels', xmlDocRels(rels, hyperlinks));
         zip.file('word/document.xml', docXml);
+        zip.file('word/settings.xml', xmlSettings());   // updateFields → TOC auto-populates
 
         const blob = await zip.generateAsync({
           type: 'blob',
           mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         });
-        await exportBundle(name, blob);
+        // Bundle the editable project JSON (and any inserted files) into one .zip.
+        const extras = [];
+        if (includeJson) {
+          extras.push({ name: base + '-raw.json', data: JSON.stringify(buildProjectPayload()) });
+        }
+        await exportBundle(name, blob, extras);
       } catch (err) {
         toast('Word export failed: ' + err.message);
         console.error(err);
@@ -4635,7 +5055,18 @@
   <Default Extension="png"  ContentType="image/png"/>
   <Override PartName="/word/document.xml"
     ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/settings.xml"
+    ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/>
 </Types>`;
+    }
+
+    function xmlSettings() {
+      // updateFields makes Word refresh the Contents (TOC) field — populating page
+      // numbers — when the document is opened.
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:updateFields w:val="true"/>
+</w:settings>`;
     }
 
     function xmlRootRels() {
@@ -4654,13 +5085,14 @@
       const linkXml = (hyperlinks || []).map(({ rId, target }) =>
         `  <Relationship Id="${rId}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink" Target="${xmlEsc(target)}" TargetMode="External"/>`
       ).join('\n');
+      const settingsXml = `  <Relationship Id="rIdSettings" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/settings" Target="settings.xml"/>`;
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-${[imgXml, linkXml].filter(Boolean).join('\n')}
+${[imgXml, linkXml, settingsXml].filter(Boolean).join('\n')}
 </Relationships>`;
     }
 
-    function xmlDocument(rels, hyperlinks) {
+    function xmlDocument(rels, hyperlinks, meta = {}) {
       const relByEntryId = new Map(rels.map((r) => [r.entry.id, r]));
       let pid = 0;
       hyperlinks = hyperlinks || [];
@@ -4684,44 +5116,54 @@ ${[imgXml, linkXml].filter(Boolean).join('\n')}
         }).join('');
       };
 
-      let docxStepNum = 0;
+      const numById = computeNumbering();
+      let ctxIndent = 0;   // twips of left indent for the cards in the current container
       const body = items.map((entry, i) => {
-        if (entry.type === 'section') {
-          docxStepNum = 0; // each section restarts numbering at 1
-          const secTitle = xmlEsc(entry.title || 'Section');
-          // Shaded light-indigo band with a thick indigo left accent bar (matches the app).
+        if (entry.type === 'section' || entry.type === 'step') {
+          const isStep = entry.type === 'step';
+          ctxIndent = isStep ? 504 : 144;   // step cards indent deeper than direct-section cards
+          const num = numById.get(entry.id) || '';
+          const heading = xmlEsc(num + '  ' + (entry.title || (isStep ? 'Step' : 'Section')));
+          // Shaded band with a coloured left accent bar; the step variant is lighter + indented.
+          const fill = isStep ? 'F5F3FF' : 'EEF2FF';
+          const accent = isStep ? 'A5B4FC' : '4F46E5';
+          const edge = isStep ? 'DDD6FE' : 'C7D2FE';
+          const accentSz = isStep ? '18' : '24';
+          const titleSz = isStep ? '24' : '28';
+          const titleColor = isStep ? '5B21B6' : '4338CA';
+          const indLeft = isStep ? '432' : '144';
           return `
   <w:p>
     <w:pPr>
       <w:pBdr>
-        <w:top w:val="single" w:sz="4" w:space="4" w:color="C7D2FE"/>
-        <w:left w:val="single" w:sz="24" w:space="10" w:color="4F46E5"/>
-        <w:bottom w:val="single" w:sz="4" w:space="4" w:color="C7D2FE"/>
-        <w:right w:val="single" w:sz="4" w:space="4" w:color="C7D2FE"/>
+        <w:top w:val="single" w:sz="4" w:space="4" w:color="${edge}"/>
+        <w:left w:val="single" w:sz="${accentSz}" w:space="10" w:color="${accent}"/>
+        <w:bottom w:val="single" w:sz="4" w:space="4" w:color="${edge}"/>
+        <w:right w:val="single" w:sz="4" w:space="4" w:color="${edge}"/>
       </w:pBdr>
-      <w:shd w:val="clear" w:color="auto" w:fill="EEF2FF"/>
-      <w:spacing w:before="280" w:after="160" w:line="276" w:lineRule="auto"/>
-      <w:ind w:left="144" w:right="144"/>
+      <w:shd w:val="clear" w:color="auto" w:fill="${fill}"/>
+      <w:spacing w:before="${isStep ? '160' : '280'}" w:after="120" w:line="276" w:lineRule="auto"/>
+      <w:ind w:left="${indLeft}" w:right="144"/>
+      <w:outlineLvl w:val="${isStep ? '1' : '0'}"/>
     </w:pPr>
     <w:r>
-      <w:rPr><w:b/><w:sz w:val="28"/><w:szCs w:val="28"/><w:color w:val="4338CA"/></w:rPr>
-      <w:t xml:space="preserve">${secTitle}</w:t>
+      <w:rPr><w:b/><w:sz w:val="${titleSz}"/><w:szCs w:val="${titleSz}"/><w:color w:val="${titleColor}"/></w:rPr>
+      <w:t xml:space="preserve">${heading}</w:t>
     </w:r>
   </w:p>`;
         }
 
-        docxStepNum++;
-        const seq = docxStepNum;
-        // const seqLabel = (entry.type === 'image' ? 'Step ' : 'Note ') + String(seq).padStart(2, '0');
-        const seqLabel = 'Step ' + String(seq).padStart(2, '0');
-        const seqPara = `
+        const seq = numById.get(entry.id) || '';
+        const indTag = ctxIndent ? `<w:ind w:left="${ctxIndent}"/>` : '';
+        // Loose cards (no number) get no label paragraph.
+        const seqPara = seq ? `
   <w:p>
-    <w:pPr><w:spacing w:before="120" w:after="60"/></w:pPr>
+    <w:pPr><w:spacing w:before="120" w:after="60"/>${indTag}</w:pPr>
     <w:r>
       <w:rPr><w:b/><w:sz w:val="22"/><w:szCs w:val="22"/><w:color w:val="4F46E5"/></w:rPr>
-      <w:t xml:space="preserve">${xmlEsc(seqLabel)}</w:t>
+      <w:t xml:space="preserve">${xmlEsc(seq)}</w:t>
     </w:r>
-  </w:p>`;
+  </w:p>` : '';
         if (entry.type === 'image') {
           pid++;
           const r = relByEntryId.get(entry.id);
@@ -4776,14 +5218,14 @@ ${[imgXml, linkXml].filter(Boolean).join('\n')}
           const fsize = entry.size ? formatFileSize(entry.size) : '';
           return `${seqPara}
   <w:p>
-    <w:pPr><w:spacing w:before="40" w:after="40"/></w:pPr>
+    <w:pPr><w:spacing w:before="40" w:after="40"/>${indTag}</w:pPr>
     <w:r>
       <w:rPr><w:b/><w:sz w:val="24"/><w:szCs w:val="24"/><w:color w:val="111827"/></w:rPr>
       <w:t xml:space="preserve">📎 [${xmlEsc(ftLabel)}] ${xmlEsc(fname)}${fsize ? '  ·  ' + xmlEsc(fsize) : ''}</w:t>
     </w:r>
   </w:p>
   <w:p>
-    <w:pPr><w:spacing w:before="0" w:after="240"/></w:pPr>
+    <w:pPr><w:spacing w:before="0" w:after="240"/>${indTag}</w:pPr>
     <w:r>
       <w:rPr><w:i/><w:iCs/><w:sz w:val="18"/><w:szCs w:val="18"/><w:color w:val="6B7280"/></w:rPr>
       <w:t xml:space="preserve">See attachments/${xmlEsc(fname)} in this .zip bundle.</w:t>
@@ -4798,10 +5240,42 @@ ${[imgXml, linkXml].filter(Boolean).join('\n')}
 
         return `${seqPara}
   <w:p>
-    <w:pPr><w:spacing w:before="40" w:after="240"/></w:pPr>
+    <w:pPr><w:spacing w:before="40" w:after="240"/>${indTag}</w:pPr>
     ${runs}
   </w:p>`;
       }).join('\n');
+
+      // ── Cover page ──
+      const cardCount = items.filter((it) => isCardType(it.type)).length;
+      const coverMetaLine = (lbl, val) => `
+  <w:p><w:pPr><w:spacing w:after="80"/></w:pPr>
+    <w:r><w:rPr><w:b/><w:color w:val="6B7280"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">${xmlEsc(lbl)}:  </w:t></w:r>
+    <w:r><w:rPr><w:color w:val="1F2937"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">${xmlEsc(val)}</w:t></w:r></w:p>`;
+      const cover = `
+  <w:p><w:pPr><w:spacing w:before="2600" w:after="0"/></w:pPr>
+    <w:r><w:rPr><w:b/><w:color w:val="4F46E5"/><w:sz w:val="22"/><w:szCs w:val="22"/></w:rPr><w:t xml:space="preserve">PASTEBOARD</w:t></w:r></w:p>
+  <w:p><w:pPr><w:spacing w:before="120" w:after="320"/></w:pPr>
+    <w:r><w:rPr><w:b/><w:color w:val="111827"/><w:sz w:val="60"/><w:szCs w:val="60"/></w:rPr><w:t xml:space="preserve">${xmlEsc(meta.base || 'Pasteboard')}</w:t></w:r></w:p>
+${coverMetaLine('Author', meta.author || '—')}
+${coverMetaLine('Created', (meta.createdAt || new Date()).toLocaleString())}
+${coverMetaLine('Items', String(cardCount))}${meta.includeJson ? `
+  <w:p><w:pPr><w:spacing w:before="260"/></w:pPr>
+    <w:r><w:rPr><w:i/><w:iCs/><w:color w:val="6B7280"/><w:sz w:val="18"/><w:szCs w:val="18"/></w:rPr><w:t xml:space="preserve">An editable project file (${xmlEsc(meta.base || 'pasteboard')}-raw.json) is bundled in this .zip — open it in Pasteboard to keep editing.</w:t></w:r></w:p>` : ''}
+  <w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+
+      // ── Contents (index) page — a real TOC field collecting the section/step
+      // outline levels; Word fills in the page numbers when it updates fields. ──
+      const toc = meta.hasDividers ? `
+  <w:p><w:pPr><w:spacing w:after="200"/></w:pPr>
+    <w:r><w:rPr><w:b/><w:color w:val="111827"/><w:sz w:val="36"/><w:szCs w:val="36"/></w:rPr><w:t xml:space="preserve">Contents</w:t></w:r></w:p>
+  <w:p>
+    <w:r><w:fldChar w:fldCharType="begin"/></w:r>
+    <w:r><w:instrText xml:space="preserve"> TOC \\o &quot;1-2&quot; \\h \\z \\u </w:instrText></w:r>
+    <w:r><w:fldChar w:fldCharType="separate"/></w:r>
+    <w:r><w:rPr><w:i/><w:iCs/><w:color w:val="6B7280"/></w:rPr><w:t xml:space="preserve">Right-click here and choose “Update Field” to build the table of contents.</w:t></w:r>
+    <w:r><w:fldChar w:fldCharType="end"/></w:r>
+  </w:p>
+  <w:p><w:r><w:br w:type="page"/></w:r></w:p>` : '';
 
       return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document
@@ -4811,6 +5285,8 @@ ${[imgXml, linkXml].filter(Boolean).join('\n')}
   xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"
   xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
+${cover}
+${toc}
 ${body}
     <w:sectPr>
       <w:pgSz w:w="12240" w:h="15840"/>
