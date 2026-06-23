@@ -3068,7 +3068,7 @@
       let looseBlock = null;
       let curSection = null;   // section node
       let curStep = null;      // step node
-      let secN = 0, stepN = 0, cardN = 0;
+      let secN = 0, stepN = 0, cardN = 0, looseN = 0;
 
       for (const entry of items) {
         if (entry.type === 'section') {
@@ -3086,14 +3086,16 @@
           else root.push(curStep);
           numById.set(entry.id, num);
         } else {
-          // Only cards inside a step are numbered (1.1.1). Loose cards — both
-          // top-level and the "direct" cards sitting above a section's steps — carry
-          // no number and render on top.
+          // Cards inside a step are numbered (1.1.1). Top-level loose cards — those
+          // pasted before any section/step exists — get a flat sequential number
+          // (1, 2, 3…). The "direct" cards sitting above a section's steps carry no
+          // number and render on top.
           let num = '', bucket;
           if (curStep) { cardN++; num = `${curStep.num}.${cardN}`; bucket = curStep.cards; curStep.count++; }
           else if (curSection) { bucket = curSection.directCards; }
           else {
             if (!looseBlock) { looseBlock = { kind: 'loose', cards: [] }; root.push(looseBlock); }
+            looseN++; num = String(looseN);
             bucket = looseBlock.cards;
           }
           bucket.push({ entry, num });
@@ -3133,7 +3135,7 @@
       for (const { entry, num } of cards) {
         const card = buildCard(entry);
         const seq = card.querySelector('.card-seq');
-        if (seq) { if (num) seq.textContent = num; else seq.remove(); } // loose cards have no number badge
+        if (seq) { if (num) seq.textContent = num; else seq.remove(); } // direct-section cards have no number badge
         row.appendChild(card);
         row.appendChild(buildInsertor(entry.id));
       }
@@ -3417,8 +3419,8 @@
     function refreshCard(entry) {
       const card = CARDS.querySelector(`.card[data-id="${entry.id}"]`);
       if (!card) return;
-      // Preserve the existing number badge. Loose cards (top-level / direct-section)
-      // carry no number, so their .card-seq is removed at render — keep it that way.
+      // Preserve the existing number badge. Direct-section cards carry no number, so
+      // their .card-seq is removed at render — keep it that way.
       const oldSeq = card.querySelector('.card-seq');
       const seqText = oldSeq ? oldSeq.textContent : null;
       const newCard = buildCard(entry);
