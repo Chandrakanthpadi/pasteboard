@@ -3199,6 +3199,21 @@
       title.addEventListener('input', () => { entry.title = title.textContent; pushHistoryDebounced(); });
       title.addEventListener('blur', () => { entry.title = title.textContent.trim(); flushPendingHistory(); updatePasteStripTarget(); });
       title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } });
+      title.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+        if (document.activeElement === title) return;
+        // Prevent browser from auto-selecting all text on first focus of a contentEditable
+        e.preventDefault();
+        title.focus();
+        let range;
+        if (document.caretRangeFromPoint) {
+          range = document.caretRangeFromPoint(e.clientX, e.clientY);
+        } else if (document.caretPositionFromPoint) {
+          const pos = document.caretPositionFromPoint(e.clientX, e.clientY);
+          if (pos) { range = document.createRange(); range.setStart(pos.offsetNode, pos.offset); range.collapse(true); }
+        }
+        if (range) { const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range); }
+      });
 
       const count = document.createElement('span');
       count.className = 'head-count';
@@ -4784,9 +4799,9 @@
 
           if (entry.type === 'section' || entry.type === 'step') {
             const isStep = entry.type === 'step';
-            cardIndent = isStep ? 36 : 16;              // step cards indent past the step band
+            cardIndent = 0;
             const num = numById.get(entry.id) || '';
-            const indent = isStep ? 20 : 0;             // steps sit indented under their section
+            const indent = 0;
             const bandX = margin + indent;
             const bandW = contentW - indent;
             const heading = num + '  ' + (entry.title || (isStep ? 'Step' : 'Section'));
@@ -4833,7 +4848,7 @@
             if (h > maxH) { h = maxH; w = h * imgEl.naturalWidth / imgEl.naturalHeight; }
 
             ensureSpace(h + 24);
-            doc.addImage(pngURL, 'PNG', margin + (contentW - w) / 2, y, w, h, undefined, 'FAST');
+            doc.addImage(pngURL, 'PNG', margin, y, w, h, undefined, 'FAST');
             y += h + 10;
 
             const cap = htmlToText(entry.caption);
@@ -5119,11 +5134,11 @@ ${[imgXml, linkXml, settingsXml].filter(Boolean).join('\n')}
       };
 
       const numById = computeNumbering();
-      let ctxIndent = 0;   // twips of left indent for the cards in the current container
+      let ctxIndent = 0;   // left indent for the cards in the current container (always 0)
       const body = items.map((entry, i) => {
         if (entry.type === 'section' || entry.type === 'step') {
           const isStep = entry.type === 'step';
-          ctxIndent = isStep ? 504 : 144;   // step cards indent deeper than direct-section cards
+          ctxIndent = 0;
           const num = numById.get(entry.id) || '';
           const heading = xmlEsc(num + '  ' + (entry.title || (isStep ? 'Step' : 'Section')));
           // Shaded band with a coloured left accent bar; the step variant is lighter + indented.
@@ -5133,7 +5148,6 @@ ${[imgXml, linkXml, settingsXml].filter(Boolean).join('\n')}
           const accentSz = isStep ? '18' : '24';
           const titleSz = isStep ? '24' : '28';
           const titleColor = isStep ? '5B21B6' : '4338CA';
-          const indLeft = isStep ? '432' : '144';
           return `
   <w:p>
     <w:pPr>
@@ -5145,7 +5159,6 @@ ${[imgXml, linkXml, settingsXml].filter(Boolean).join('\n')}
       </w:pBdr>
       <w:shd w:val="clear" w:color="auto" w:fill="${fill}"/>
       <w:spacing w:before="${isStep ? '160' : '280'}" w:after="120" w:line="276" w:lineRule="auto"/>
-      <w:ind w:left="${indLeft}" w:right="144"/>
       <w:outlineLvl w:val="${isStep ? '1' : '0'}"/>
     </w:pPr>
     <w:r>
@@ -5179,7 +5192,7 @@ ${[imgXml, linkXml, settingsXml].filter(Boolean).join('\n')}
 
           return `${seqPara}
   <w:p>
-    <w:pPr><w:jc w:val="center"/><w:spacing w:after="0"/></w:pPr>
+    <w:pPr><w:spacing w:after="0"/></w:pPr>
     <w:r>
       <w:drawing>
         <wp:inline distT="0" distB="0" distL="0" distR="0">
